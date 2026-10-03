@@ -1,0 +1,8 @@
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/intro_scene/1080p60/Demo_Intro_Energiebilanz.mp4'
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/full_energy_balance_video/1080p60/EnergyBalance_01_Energiebilanz.mp4'
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/full_energy_balance_video/1080p60/EnergyBalance_02_RegelwerkKlima.mp4'
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/full_energy_balance_video/1080p60/EnergyBalance_03_BedarfVsLeistung.mp4'
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/full_energy_balance_video/1080p60/EnergyBalance_04_NutzZuEndenergie.mp4'
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/full_energy_balance_video/1080p60/EnergyBalance_05_Primaerenergie.mp4'
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/full_energy_balance_video/1080p60/EnergyBalance_06_Energieausweis.mp4'
+file '/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/tutorial/energy/demand/EnergyBalance/media/videos/full_energy_balance_video/1080p60/EnergyBalance_07_TheorieVsPraxis.mp4'

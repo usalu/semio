@@ -1,0 +1,27 @@
+{
+  "id": "2026/09/20/RENDER-ENERGY-BALANCE-HQ",
+  "title": "Render Energy Balance Hq",
+  "slug": "RENDER-ENERGY-BALANCE-HQ",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Render EnergyBalance intro plus Kapitel 1–7 at 1080p60 and merge into one silent video.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {
+    "due": "2026-09-20",
+    "started": "2026-09-20",
+    "completed": "2026-09-20"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4-6",
+  "summary": "Rendered EnergyBalance intro + Kapitel 1–7 at 1080p60 and merged into one 22:13 silent H.264 file.",
+  "files": {
+    "created": [
+      "tutorial/energy/demand/EnergyBalance/rendered/Full_EnergyBalance_NoAudio_1080p60.mp4"
+    ],
+    "updated": [
+      "tutorial/energy/demand/EnergyBalance/full_energy_balance_video.py",
+      "tutorial/energy/demand/EnergyBalance/rendered/Full_EnergyBalance_1080p60.mp4",
+      ".vscode/launch.json"
+    ]
+  }
+}

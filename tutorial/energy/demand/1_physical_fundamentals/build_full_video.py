@@ -14,8 +14,10 @@ INTRO_SCRIPT = SEMIO_ROOT / "tutorial" / "intro" / "intro_scene.py"
 INTRO_SCENE = "Demo_Intro_PhysikalischeGrundlagen"
 # endregion
 sys.path.insert(0, str(NOWIGETIT_ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backend.pipeline.compose import probe_duration
+from scene_1 import BEATS
 
 
 def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
@@ -86,16 +88,9 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     intro_audio = SEMIO_ROOT / "tutorial" / "intro" / "intro_physical_fundamentals.mp3"
-    scenes = [
-        (INTRO_SCENE, INTRO_SCRIPT, intro_audio),
-        ("Beat1_UnsichtbareDimension", script_path, base_dir / "beat_1_audio.mp3"),
-        ("Beat2_KraftUndArbeit", script_path, base_dir / "beat_2_audio.mp3"),
-        ("Beat3_ArbeitZuLeistung", script_path, base_dir / "beat_3_audio.mp3"),
-        ("Beat4_Kilowattstunde", script_path, base_dir / "beat_4_audio.mp3"),
-        ("Beat5_Groessenordnungen", script_path, base_dir / "beat_5_audio.mp3"),
-        ("Beat6_Energieerhaltung", script_path, base_dir / "beat_6_audio.mp3"),
-        ("Beat7_Waermepumpe", script_path, base_dir / "beat_7_audio.mp3"),
-        ("Beat8_Ausblick", script_path, base_dir / "beat_8_audio.mp3"),
+    scenes = [(INTRO_SCENE, INTRO_SCRIPT, intro_audio)] + [
+        (beat.__name__, script_path, base_dir / f"beat_{index}_audio.mp3")
+        for index, beat in enumerate(BEATS, start=1)
     ]
 
     def resolve_audio(path: Path) -> Path:

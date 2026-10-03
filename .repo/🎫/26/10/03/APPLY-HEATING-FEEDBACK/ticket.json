@@ -1,0 +1,15 @@
+{
+  "id": "2026/10/03/APPLY-HEATING-FEEDBACK",
+  "title": "Apply Heating Review Feedback",
+  "slug": "APPLY-HEATING-FEEDBACK",
+  "emoji": "🔥",
+  "status": "open",
+  "description": "Apply the supervisor review of the Heating video: animated transmission and air change, U·A per m², watt comparison of wall standards, thermal bridges, net vs gross volume, tilt vs purge ventilation, correct winter sun patch, shading factor 1→0, utilisation factor, system losses, factors counted from 0, typeset formulas, plainer text. Everything not named in the feedback stays unchanged.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {
+    "due": "2026-10-03",
+    "started": "2026-10-03"
+  },
+  "client": "claude-code",
+  "llm": "opus-4-7"
+}

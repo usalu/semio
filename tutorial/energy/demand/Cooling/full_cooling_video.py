@@ -263,7 +263,7 @@ def _find_named_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Path
         reverse=True,
     )
     for match in matches:
-        if match.stat().st_size > 1000:
+        if folder in match.parts and match.stat().st_size > 1000:
             return match
     raise FileNotFoundError(f"Rendered mp4 not found for {scene_name} under {media_dir}")
 
@@ -286,7 +286,7 @@ def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
         "ffmpeg", "-y",
         "-f", "concat", "-safe", "0",
         "-i", str(list_path),
-        "-c", "copy",
+        "-c:v", "copy", "-an",
         str(output),
     ]
     subprocess.run(cmd, check=True)
@@ -378,12 +378,15 @@ def compose_full_cooling_video(
     output = out_dir / "FullCoolingDemandVideo.mp4"
     list_path = out_dir / "section_concat_list.txt"
     rendered_copy = _COOLING_ROOT / "rendered" / f"Full_Cooling_Demand_{folder}.mp4"
-    print(f"\n=== Merging {len(clips)} clips (intro + sections) → {output.name} ===")
+    noaudio_copy = _COOLING_ROOT / "rendered" / f"Full_Cooling_Demand_NoAudio_{folder}.mp4"
+    print(f"\n=== Merging {len(clips)} silent clips (intro + sections) → {output.name} ===")
     _ffmpeg_concat(clips, output, list_path)
     rendered_copy.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(output, rendered_copy)
+    shutil.copy2(output, noaudio_copy)
     print(f"\n✅ Single full video: {output}")
     print(f"✅ Copy:  {rendered_copy}")
+    print(f"✅ Copy:  {noaudio_copy}")
 
     if play:
         opener = {"darwin": "open", "win32": "start"}.get(sys.platform, "xdg-open")

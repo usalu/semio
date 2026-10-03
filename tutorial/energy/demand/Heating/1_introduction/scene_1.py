@@ -96,28 +96,60 @@ def _section(*, cy=SECTION_C[1], warm_opacity=0.24, cold_opacity=0.22):
     }
 
 
-def _buoyancy_cell(wall_x, far_x, y_bot, y_top, *, rise_on_wall: bool):
-    """🌡️ Smooth convection roll next to a vertical wall.
+def _pt(x, y):
+    return np.array([x, y, 0.0])
 
-    A real buoyancy loop is an elongated oval, not a rectangle with barely
-    clipped corners — the previous ``set_points_as_corners`` racetrack read as
-    a boxy, mechanical outline instead of rising, buoyant air. Travelling a
-    closed ellipse counter-clockwise always rises on the ellipse's own right
-    flank and sinks on its left (a property of CCW motion, not of which side
-    the wall is on), so the wall side picks CCW vs. CW once, and the curve
-    itself — via ``set_points_smoothly`` on many samples — stays organic
-    through the corner where it used to be angular.
+
+def _rounded_room_loop(x_left, x_right, y_bot, y_top, *, corner=0.36):
+    """🌡️ Indoor convection as a rounded rectangle.
+
+    Rise on the warm wall (right edge), across the ceiling, sink in the room,
+    return along the floor. Starts at the bottom of the wall so the first
+    motion is the buoyant climb.
     """
-    cx, cy = (wall_x + far_x) / 2.0, (y_top + y_bot) / 2.0
-    rx, ry = abs(far_x - wall_x) / 2.0, abs(y_top - y_bot) / 2.0
-    wall_on_east = wall_x > far_x
-    ccw = wall_on_east == rise_on_wall
-    n = 56
-    sweep = TAU if ccw else -TAU
-    thetas = np.linspace(-PI / 2, -PI / 2 + sweep, n + 1)
+    r = min(corner, (x_right - x_left) / 2.4, (y_top - y_bot) / 2.4)
+    n_line, n_arc = 8, 10
+    pts = []
+
+    def line(a, b):
+        for i in range(n_line):
+            t = i / n_line
+            pts.append((1.0 - t) * a + t * b)
+
+    def arc(c, a0, a1):
+        for i in range(n_arc):
+            t = i / n_arc
+            ang = a0 + t * (a1 - a0)
+            pts.append(c + r * np.array([np.cos(ang), np.sin(ang), 0.0]))
+
+    line(_pt(x_right, y_bot + r), _pt(x_right, y_top - r))
+    arc(_pt(x_right - r, y_top - r), 0.0, PI / 2)
+    line(_pt(x_right - r, y_top), _pt(x_left + r, y_top))
+    arc(_pt(x_left + r, y_top - r), PI / 2, PI)
+    line(_pt(x_left, y_top - r), _pt(x_left, y_bot + r))
+    arc(_pt(x_left + r, y_bot + r), PI, 3 * PI / 2)
+    line(_pt(x_left + r, y_bot), _pt(x_right - r, y_bot))
+    arc(_pt(x_right - r, y_bot + r), 3 * PI / 2, TAU)
+    pts.append(pts[0].copy())
+    path = TipableVMobject()
+    path.set_points_smoothly(pts)
+    return path
+
+
+def _feed_from_aussen(x_from, x_join, y):
+    """🌬️ Outdoor parcels joining the indoor loop at mid-height.
+
+    They arrive through the wall film at the middle of the warm face and
+    merge into the rising indoor stream. Slow on purpose: a trickle that
+    cools the room, not a second cell.
+    """
+    mid = (x_from + x_join) / 2.0
     pts = [
-        np.array([cx + rx * np.cos(t), cy + ry * np.sin(t), 0.0])
-        for t in thetas
+        _pt(x_from, y),
+        _pt(mid + (x_from - mid) * 0.35, y),
+        _pt(mid, y),
+        _pt(mid + (x_join - mid) * 0.35, y),
+        _pt(x_join, y),
     ]
     path = TipableVMobject()
     path.set_points_smoothly(pts)
@@ -440,21 +472,21 @@ class Beat2_Waermeleitung(Scene):
 #endregion
 
 
-#region Beat3 – Convection: air films at the surfaces, air stays indoors
+#region Beat3 – Convection: indoor rounded cell, slow mid-height Außen feed
 class Beat3_Konvektion(Scene):
     NARRATION = [
         ("label",
          "The second way is convection: air next to the wall carries heat, without the wall itself moving.",
          "Der zweite Weg ist die Konvektion: Luft an der Wand trägt die Wärme — die Wand selbst bewegt sich nicht."),
         ("gap",
-         "A thin air film sits on each face. Indoor air rises along the warm side; outdoor air moves along the cold side.",
-         "An jeder Fläche sitzt ein dünner Luftfilm. Innen steigt Luft an der warmen Seite, außen streicht sie an der kalten."),
+         "Indoors, one cell: parcels at the top stay warmer, parcels at the floor run colder.",
+         "Innen eine Zelle: oben bleiben die Pakete wärmer, unten laufen sie kälter."),
         ("loop",
          "Those films are the surface resistances R si and R se in DIN EN ISO 6946.",
          "Diese Filme sind die Wärmeübergangswiderstände R-si und R-se nach DIN EN ISO 6946."),
         ("carrier",
-         "Follow one parcel: it stays in the room. Heat crosses the surface; the air does not have to leave the building.",
-         "Ein Luftpaket bleibt im Raum. Die Wärme geht über die Oberfläche — die Luft muss das Gebäude nicht verlassen."),
+         "Cold outdoor air seeps in slowly at mid-height and joins the loop. The room cools as it does.",
+         "Kalte Außenluft sickert in der Mitte langsam ein und geht in die Zelle. Der Raum kühlt dabei ab."),
         ("symbol",
          "Surface convection is Q dot c — part of the U-value, not the air-change loss.",
          "Die Oberflächenkonvektion ist Q-Punkt-c — Teil des U-Werts, nicht des Luftwechselverlusts."),
@@ -465,7 +497,7 @@ class Beat3_Konvektion(Scene):
 
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Konvektion — Luftfilm an der Oberfläche", title)
+        subtitle = beat_subtitle("Konvektion", title)
         din = _din_ref("DIN EN ISO 6946")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -480,37 +512,33 @@ class Beat3_Konvektion(Scene):
         wall_r = float(sec["wall"].get_right()[0])
         warm_l = float(sec["warm"].get_left()[0])
         cold_r = float(sec["cold"].get_right()[0])
-        y_top = float(sec["warm"].get_top()[1]) - 0.22
-        y_bot = float(sec["warm"].get_bottom()[1]) + 0.22
+        y_top = float(sec["warm"].get_top()[1]) - 0.20
+        y_bot = float(sec["warm"].get_bottom()[1]) + 0.20
         cy = float(sec["wall"].get_center()[1])
+        corner = 0.34
+        x_right = wall_l - 0.18
+        x_left = warm_l + 0.28
 
-        inner_far = max(warm_l + 0.28, wall_l - 1.22)
-        outer_far = min(cold_r - 0.28, wall_r + 1.22)
-        inner = VGroup(*[
-            _buoyancy_cell(wall_l - 0.20, inner_far, y_bot, y_top, rise_on_wall=True),
-            _buoyancy_cell(wall_l - 0.42, 0.5 * (wall_l - 0.20 + inner_far), y_bot + 0.14, y_top - 0.14, rise_on_wall=True),
-        ])
-        outer = VGroup(*[
-            _buoyancy_cell(wall_r + 0.20, outer_far, y_bot, y_top, rise_on_wall=False),
-            _buoyancy_cell(wall_r + 0.42, 0.5 * (wall_r + 0.20 + outer_far), y_bot + 0.14, y_top - 0.14, rise_on_wall=False),
-        ])
+        indoor = _rounded_room_loop(x_left, x_right, y_bot, y_top, corner=corner)
+        indoor_g = VGroup(indoor)
+        feeder = _feed_from_aussen(cold_r - 0.32, x_right, cy)
+        feeder_g = VGroup(feeder)
 
         rsi = Text("R_si", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        rsi.move_to(np.array([wall_l - 0.72, y_top + 0.30, 0.0]))
+        rsi.move_to(np.array([wall_l - 0.72, y_top + 0.32, 0.0]))
         rse = Text("R_se", font_size=LABEL_FONT_SIZE, color=P_BLUE)
-        rse.move_to(np.array([wall_r + 0.72, y_top + 0.30, 0.0]))
-        in_tag = Text("Luftfilm innen", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        in_tag.next_to(sec["ti"], DOWN, buff=0.08)
-        out_tag = Text("Luftfilm außen", font_size=LABEL_FONT_SIZE, color=P_BLUE)
-        out_tag.next_to(sec["te"], DOWN, buff=0.08)
+        rse.move_to(np.array([wall_r + 0.72, y_top + 0.32, 0.0]))
+        in_tag = Text("oben warm · unten kalt", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
+        in_tag.move_to(np.array([sec["warm"].get_center()[0], y_top + 0.32, 0.0]))
+        feed_tag = Text("langsamer Zustrom", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        feed_tag.move_to(np.array([sec["cold"].get_center()[0], cy + 0.42, 0.0]))
 
-        parcel_path = inner[0]
         parcel = Dot(radius=0.14, color=P_ORANGE, fill_opacity=1.0)
         parcel_glow = Circle(radius=0.22, color=P_YELLOW, stroke_width=2.0, fill_opacity=0.0)
-        parcel.move_to(parcel_path.point_from_proportion(0.0))
+        parcel.move_to(indoor.point_from_proportion(0.0))
         parcel_glow.move_to(parcel.get_center())
-        parcel_tag = Text("bleibt im Raum", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        parcel_tag.move_to(np.array([sec["warm"].get_center()[0], cy + 0.08, 0.0]))
+        ti_cool = Text("innen kühlt ab", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        ti_cool.move_to(sec["ti"].get_center())
 
         hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -518,61 +546,70 @@ class Beat3_Konvektion(Scene):
         self.play(FadeIn(sec["ti"]), FadeIn(sec["te"]), FadeIn(routes), run_time=0.8)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gap"))
-        guides = VGroup(
-            flow_guides(inner, P_ORANGE, opacity=0.40, width=2.2, tips=False),
-            flow_guides(outer, P_BLUE, opacity=0.40, width=2.2, tips=False),
-        )
-        self.play(Create(guides), FadeIn(in_tag), FadeIn(out_tag), run_time=1.2)
+        indoor_guides = flow_guides(indoor_g, P_ORANGE, opacity=0.50, width=2.6, tips=False)
+        self.play(Create(indoor_guides), FadeIn(in_tag), run_time=1.2)
         animate_flows(
             self,
-            [
-                (inner, P_ORANGE, P_YELLOW),
-                (outer, P_CYAN, P_BLUE),
-            ],
-            run_time=3.6,
+            [(indoor_g, P_BLUE, P_YELLOW, True, 1.25, "y")],
+            run_time=5.0,
             waves=10,
-            cycles=2.6,
-            radius=0.062,
-            closed=True,
+            radius=0.070,
         )
-        hold_for(self, self.NARRATION, "gap", used=1.2 + 3.6 + 0.35)
+        hold_for(self, self.NARRATION, "gap", used=1.2 + 5.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "loop"))
         self.play(FadeIn(rsi), FadeIn(rse), run_time=0.8)
         hold_for(self, self.NARRATION, "loop", used=0.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "carrier"))
+        feeder_guides = flow_guides(feeder_g, P_CYAN, opacity=0.55, width=2.4, tips=True)
         self.play(
+            FadeOut(in_tag),
+            Create(feeder_guides),
+            FadeIn(feed_tag),
             FadeIn(parcel, scale=0.5),
             FadeIn(parcel_glow),
-            FadeIn(parcel_tag),
-            run_time=0.6,
+            run_time=0.8,
         )
-        self.play(FadeOut(parcel_tag), run_time=0.3)
+        warm0 = ManimColor(P_ORANGE)
+        cold1 = ManimColor(P_BLUE)
+
+        def cool_room(mob, alpha):
+            mob.set_fill(interpolate_color(warm0, cold1, 0.62 * alpha), opacity=0.24 - 0.07 * alpha)
+
+        def paint_parcel(_mob, alpha):
+            pos = parcel.get_center()
+            u = float(np.clip((pos[1] - y_bot) / max(1e-6, y_top - y_bot), 0.0, 1.0))
+            fill = interpolate_color(cold1, ManimColor(P_YELLOW), u)
+            fill = interpolate_color(fill, cold1, 0.50 * alpha)
+            parcel.set_fill(fill, opacity=1.0)
+            parcel_glow.set_stroke(fill, opacity=0.85)
+            parcel_glow.move_to(pos)
+
         animate_flows(
             self,
             [
-                (inner, P_ORANGE, P_YELLOW),
-                (outer, P_CYAN, P_BLUE),
+                (indoor_g, P_BLUE, P_YELLOW, True, 1.20, "y", True),
+                (feeder_g, P_CYAN, P_BLUE, False, 0.28, "t"),
             ],
-            run_time=3.4,
-            waves=10,
-            cycles=2.4,
-            radius=0.060,
-            closed=True,
+            run_time=6.4,
+            waves=8,
+            radius=0.068,
             extra=[
-                MoveAlongPath(parcel, parcel_path, rate_func=linear),
-                MoveAlongPath(parcel_glow, parcel_path, rate_func=linear),
+                MoveAlongPath(parcel, indoor, rate_func=linear),
+                UpdateFromAlphaFunc(parcel_glow, paint_parcel),
+                UpdateFromAlphaFunc(sec["warm"], cool_room),
+                Transform(sec["ti"], ti_cool),
             ],
         )
-        hold_for(self, self.NARRATION, "carrier", used=0.6 + 0.3 + 3.4 + 0.35)
+        hold_for(self, self.NARRATION, "carrier", used=0.8 + 6.4 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = symbol_token("Q̇_c", color=P_CYAN, font_size=FORMULA_FONT_SIZE)
         token.move_to(np.array([0.0, cy + 0.15, 0.0]))
         self.play(
-            ReplacementTransform(guides, token),
-            FadeOut(in_tag), FadeOut(out_tag), FadeOut(rsi), FadeOut(rse),
+            ReplacementTransform(VGroup(indoor_guides, feeder_guides), token),
+            FadeOut(rsi), FadeOut(rse), FadeOut(feed_tag),
             FadeOut(parcel), FadeOut(parcel_glow),
             run_time=1.2,
         )

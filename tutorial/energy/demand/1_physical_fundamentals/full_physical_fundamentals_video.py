@@ -1,4 +1,4 @@
-"""🎬 Full Physical Fundamentals video — all eight beats in curriculum order.
+"""🎬 Full Physical Fundamentals video — all nine beats in curriculum order.
 
 Recommended: run this file as a script (beat renders + ffmpeg concat).
 """
@@ -38,19 +38,7 @@ def _load_module(module_name: str, path: Path) -> ModuleType:
 _m1 = _load_module("pf_full_m1", _PF_ROOT / "scene_1.py")
 
 PHYSICAL_FUNDAMENTALS_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
-    (
-        "Physikalische Grundlagen",
-        [
-            _m1.Beat1_UnsichtbareDimension,
-            _m1.Beat2_KraftUndArbeit,
-            _m1.Beat3_ArbeitZuLeistung,
-            _m1.Beat4_Kilowattstunde,
-            _m1.Beat5_Groessenordnungen,
-            _m1.Beat6_Energieerhaltung,
-            _m1.Beat7_Waermepumpe,
-            _m1.Beat8_Ausblick,
-        ],
-    ),
+    ("Physikalische Grundlagen", list(_m1.BEATS)),
 ]
 
 _BIND_ATTRS = ("NARRATION", "topic_de", "topic_explain_de", "series_de", "hold_seconds")

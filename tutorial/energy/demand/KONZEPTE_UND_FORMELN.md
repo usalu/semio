@@ -9,7 +9,7 @@ Jedes Kapitel fasst **Lernziel**, **Kernbegriffe**, **Formeln** und **Merksätze
 
 ```mermaid
 flowchart TB
-    PF["0 · Physikalische Grundlagen<br/>N · J · W · kWh · COP · JAZ"]
+    PF["0 · Physikalische Grundlagen<br/>kWh · kW · COP · Strahlung · Speicher · Feuchte · Venturi · N"]
     H1["Heizung Modul 1<br/>Drei Wärmeübertragungswege · U-Wert"]
     H2["Heizung Modul 2<br/>Leitung · R · U"]
     H3["Heizung Modul 3<br/>Konvektion · Lüftung"]
@@ -29,7 +29,7 @@ flowchart TB
 
 | # | Video | Ordner | Normen (Auswahl) |
 |---|-------|--------|------------------|
-| 0 | Physikalische Grundlagen | `1_physical_fundamentals/` | — |
+| 0 | Physikalische Grundlagen | `1_physical_fundamentals/` | DIN EN 12831, DIN V 18599, DIN EN 14511, VDI 4650, DIN EN 410, DIN 4108-2/-3, DIN EN ISO 13786, DIN 1946-6 |
 | H1–H5 | Heizwärmebedarf (5 Module) | `Heating/` | DIN EN ISO 6946, DIN EN 12831, DIN V 18599 |
 | HF | Heizwärmebedarf — Bilanz | `Heating/final_calculation/` | DIN V 18599 |
 | C1–C6 | Kühllast (6 Teile) | `Cooling/` | DIN V 18599, VDI 2078 (implizit) |
@@ -38,100 +38,110 @@ flowchart TB
 
 ## 0 · Physikalische Grundlagen
 
-**Titel:** Physikalische Zusammenhänge: Kraft, Leistung & Energie  
-**Datei:** `1_physical_fundamentals/scene_1.py` · **8 Beats**
+**Titel:** Physikalische Grundlagen  
+**Datei:** `1_physical_fundamentals/scene_1.py` · **9 Beats** (Reihenfolge: `BEATS` in `scene_1.py`)
 
 ### Lernziel
 
-Die Sprache der Gebäudeenergie verstehen, bevor Heiz- und Kühlbedarf berechnet werden: Architektur trifft Bauphysik, die **vier Grundeinheiten** (N, J, W, kWh), **Kraft → Arbeit → Leistung → Energie**, Größenordnungen, **1. Hauptsatz**, Wärmepumpen-**COP**/**JAZ** sowie der Unterschied **Endenergie / Primärenergie**.
+Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Bauteil, das sie bestimmt: **Energie (kWh)** im Alltag, **Leistung (kW)** als Fläche im Leistung-Zeit-Diagramm, **Energieerhaltung**, **Wärmepumpe/COP** im Vergleich zu anderen Heizsystemen, **Strahlung** am Glas, **thermische Masse** der Decke, **sensible/latente Wärme**, **Venturi-Effekt** an Öffnungen — und zuletzt die **Kraft (N)**, die im Joule steckt.
 
 ### Beat-Übersicht
 
 | Beat | Untertitel | Inhalt |
 |------|------------|--------|
-| 1 | Die unsichtbare Dimension der Architektur | Haus Winter/Sommer · vier Größen · typische Einheitenverwechslungen |
-| 2 | Von der Kraft zur Arbeit | Newton-Referenz · g · W = F·s · Flächenbild · gespeicherte Energie |
-| 3 | Von der Arbeit zur Leistung | Gleiche Arbeit, andere Zeit · P = W/t · Watt als Momentanwert |
-| 4 | Warum Kilowattstunden? | E = P·t · Rohr/Eimer-Analogie · Wh→GWh-Leiter |
-| 5 | Ein Gefühl für Größenordnungen | Leiter von Kerze bis Kraftwerk (Hannover-Beispiele) |
-| 6 | Erster Hauptsatz | 100-W-Lampe · Licht→Wärme · interne Last saisonal |
-| 7 | Der Wärmepumpen-Trick (COP) | 1+3=4 · kW_el/kW_th · Heizstab COP=1 · JAZ |
-| 8 | Ausblick | Rohr vs. Eimer · Heizlast vs. Heizwärmebedarf · kWh/m²a |
+| 1 | Energie im Alltag — die Kilowattstunde | Zähler · weggelassenes „h“ · 1 kWh = Staubsauger 1 h = ≈ 3 min warm duschen · Energie-Skala Teelicht → Welt · Glas, Decke, Öffnungen |
+| 2 | Leistung — wie schnell Energie fließt | E = P · t als Fläche · Staubsauger/Wasserkocher/Dusche · 1 W = 1 J/s · Leistungs-Skala Teelicht → alle Kraftwerke · Heizlast vs. Heizwärmebedarf |
+| 3 | Energie bleibt erhalten — jedes Watt wird Wärme | E_ein = E_aus + ΔE_Speicher · Lampe 5 % Licht + 95 % Wärme → 100 % Wärme · Mensch 100 W · Winter/Sommer |
+| 4 | Wärmepumpe — Wärme verschieben statt erzeugen | Kältekreis animiert · 1 + 3 = 4 · COP aus Balken · COP(Außentemperatur) · JAZ · Vergleich Holz, Öl, Gas, Elektro, Luft-/Erd-WP |
+| 5 | Strahlung — kurzwellig hinein, langwellig gefangen | g-Wert aus Strahlen · Q̇_S = g · A · I · langwellige Rückstrahlung, Low-E · Treibhauseffekt · Sonnenschutz außen |
+| 6 | Thermische Masse — speichern und zeitversetzt abgeben | Q = m · c · ΔT an 1 m² Betondecke · 24-h-Verlauf, Phasenverschiebung, Dämpfung · warum die Decke · Nachtlüftung/Sonnengewinne |
+| 7 | Sensible und latente Wärme | T-Q-Diagramm Wasser · Sättigungskurve x_s(ϑ) · Taupunkt · Mensch 70 W sensibel + 30 W latent · Tauwasser/Entfeuchtung |
+| 8 | Venturi-Effekt — Luft in Bewegung | A₁ · v₁ = A₂ · v₂ · Druckabfall, Sog · Wind über den First · Lage und Größe der Öffnungen · Lüftungswärmeverlust |
+| 9 | Kraft — was in einem Joule steckt | F_G = m · g · W = F · s als Fläche · Herz: 1 N über 1 m pro Sekunde → 1 J → 1 W · 1 000 Herzen = 1 kW · 1 kWh = 3,6 · 10⁶ J |
 
 ### Kernbegriffe
 
-| Begriff | Definition | Alltagsanker |
-|---------|------------|--------------|
-| **Bauphysik** | Physik des geschlossenen Raums — läuft parallel zur Architektur | Winterverlust & Sommerüberhitzung am selben Haus |
-| **Newton (N)** | Einheit der Kraft | ≈ Gewicht von 100 g (Riegel Schokolade) |
-| **g** | Erdbeschleunigung ≈ 9,81 m/s² | Masse × g = Gewichtskraft |
-| **Joule (J)** | Einheit der Energie / Arbeit | 1 N × 1 m; winzig (Schokoriegel 1 m hoch ≈ 1 J) |
-| **Watt (W)** | Leistung = Energiefluss pro Zeit | 1 J/s — „Tacho“ der Energie (Momentanwert) |
-| **Kilowatt (kW)** | 1 000 W | Rohr — wie schnell gerade Energie fließt |
-| **Kilowattstunde (kWh)** | Energie = Leistung × Zeit | Eimer — gesammelte Menge (1 kW · 1 h = 1 kWh) |
-| **Heizlast** | Max. Wärmeleistung in der kältesten Stunde | Dimensionierung des Erzeugers (kW), DIN EN 12831 |
-| **Heizwärmebedarf** | Jahresenergie über die Heizperiode | Jahresbilanz (kWh/m²a), DIN V 18599 |
-| **COP** | Leistungszahl einer Wärmepumpe | Q_ab ÷ W_zu (z. B. 4 kWh aus 1 kWh Strom + 3 kWh Umweltwärme) |
-| **JAZ** | Jahresarbeitszahl — COP über die Heizsaison | Luft-WP Hannover eher ≈ 3 (Kälte, Abtauen) |
-| **kW_el / kW_th** | Elektrische Antriebs- vs. thermische Heizleistung | Datenblatt z. B. 2,5 kW_el → 10 kW_th |
-| **Endenergie** | Energie am Verbraucher (Steckdose) | — |
-| **Primärenergie** | Aufwand im Kraftwerk für diese Endenergie | Thema des nächsten Videos |
+| Begriff | Definition | Was ist „1 …“? |
+|---------|------------|----------------|
+| **Kilowattstunde (kWh)** | Energie / verrichtete Arbeit: 1 kW eine Stunde lang | Staubsauger 1 h · ≈ 3 min warm duschen (30 l von 10 auf 38 °C) |
+| **Kurzform** | Im Alltag fällt oft das „h“ weg („4 000 kW verbraucht“) | ohne „h“ ist es eine Leistung, keine Menge |
+| **Kilowatt (kW)** | Leistung = Energie pro Zeit | Staubsauger ≈ 1 kW · Wasserkocher 2 kW · Durchlauferhitzer 18–24 kW |
+| **Watt (W)** | 1 J pro Sekunde | ein Herzschlag pro Sekunde |
+| **Joule (J)** | 1 N über 1 m | Apfel (100 g) 1 m hochheben · ein Herzschlag |
+| **Newton (N)** | Kraft; Gewichtskraft F_G = m · g | Erde zieht an 100 g mit ≈ 1 N |
+| **Heizlast** | Spitzenleistung der kältesten Stunde | EFH ≈ 8 kW, DIN EN 12831 |
+| **Heizwärmebedarf** | Fläche unter der Leistungskurve übers Jahr | EFH ≈ 15 000 kWh/a, DIN V 18599 |
+| **COP** | Heizwärme / Strom in einem Betriebspunkt | 1 kWh Strom + 3 kWh Umweltwärme = 4 kWh, DIN EN 14511 |
+| **JAZ** | Jahresarbeitszahl, COP übers Jahr | Luft-WP ≈ 3, Erd-WP ≈ 4, VDI 4650 |
+| **g-Wert** | Anteil der Solarstrahlung, der durchs Glas kommt | Dreifachverglasung ≈ 0,5, DIN EN 410 |
+| **kurz-/langwellig** | Sonne: Licht und nahes IR · warme Flächen: fernes IR | Glas lässt kurzwellig durch, langwellig kaum (Low-E reflektiert) |
+| **Thermische Masse** | Wärmespeicher eines Bauteils, Q = m · c · ΔT | 1 m² Beton, 10 cm, 2 K → 480 kJ ≈ 0,13 kWh |
+| **Phasenverschiebung φ** | Zeitversatz der Temperaturspitze durch Speichermasse | massive Decke ≈ 6 h (schematisch), DIN EN ISO 13786 |
+| **sensible Wärme** | ändert die Temperatur | 1 kg Wasser 0 → 100 °C: 419 kJ |
+| **latente Wärme** | steckt im Phasenwechsel, Temperatur bleibt | Verdampfen 1 kg Wasser: 2 257 kJ |
+| **Taupunkt** | Temperatur, bei der φ = 100 % erreicht wird | 20 °C / 50 % → ≈ 9,3 °C, DIN 4108-3 |
+| **Venturi-Effekt** | Engstelle → schneller → niedrigerer Druck → Sog | halber Querschnitt, doppelte Geschwindigkeit |
 
 ### Formeln
 
 | Formel | Bedeutung |
 |--------|-----------|
-| **F_G = m · g** | Gewichtskraft (100 g → ≈ 1 N) |
-| **W = F · s** | Arbeit = Kraft × Weg [J] |
-| *(Fläche unter F–s-Diagramm)* | Arbeit = Rechteckfläche (Kraft × Hubhöhe) |
-| **1 J = 1 N · 1 m** | Definition Joule |
-| **P = W / t** | Leistung = Arbeit ÷ Zeit; halbe Zeit → doppelte Leistung |
-| **1 W = 1 J/s** | Definition Watt |
-| **1 kW = 1 000 J/s** | Kilowatt als kontinuierlicher Energiefluss |
-| **E = P · t** | Energie = Leistung × Zeit |
-| **1 kW · 1 h = 1 kWh** | Rohr eine Stunde offen → ein Eimer voll |
-| **1 kWh = 3 600 000 J = 3,6 MJ** | Umrechnung (1 h = 3 600 s) |
-| **ΣE = konstant** | 1. Hauptsatz der Thermodynamik |
-| **100 W Strom → ≈ 5 W Licht + ≈ 95 W Wärme** | Glühbirne; Licht wird an Oberflächen absorbiert → 100 % Wärme |
-| **COP = Q_ab / W_zu** | z. B. 1 kWh Strom + 3 kWh Umweltwärme → 4 kWh Heizwärme, COP = 4 |
-| **COP = 1** | Heizstab: 1 kWh Strom → 1 kWh Wärme |
+| **1 kW · 1 h = 1 kWh** | Kilowatt mal Stunde |
+| **Q = m · c · ΔT** | sensible Wärme (Dusche, Betondecke, Wasser) |
+| **E = P · t**, **P = E / t** | Energie = Fläche im Leistung-Zeit-Diagramm |
+| **1 W = 1 J/s**, **1 kWh = 3,6 · 10⁶ J** | Grundeinheit und Umrechnung |
+| **E_ein = E_aus + ΔE_Speicher** | 1. Hauptsatz für einen Raum |
+| **P_el = P_Licht + P_Wärme** | 100 W = 5 W + 95 W → am Ende 100 W Wärme |
+| **COP = Q_H / W_el** | 4 kWh / 1 kWh = 4 |
+| **Q̇_S = g · A · I** | 0,5 · 2,0 m² · 500 W/m² = 500 W |
+| **m = ρ · A · d** | 2 400 kg/m³ · 1 m² · 0,10 m = 240 kg |
+| **Q_lat = m · r** | 1 kg · 2 257 kJ/kg |
+| **A₁ · v₁ = A₂ · v₂**, **p + ½ ρ v² = konstant** | Kontinuität und Bernoulli |
+| **Q̇_V = 0,34 Wh/(m³ K) · V̇ · ΔT** | 100 m³/h · 20 K → 680 W |
+| **F_G = m · g**, **W = F · s** | 0,1 kg · 9,81 m/s² ≈ 1 N; 1 N · 1 m = 1 J |
 
-### Größenordnungen (Hannover-Kontext)
+### Skalen
+
+| Energie | Beispiel |
+|---------|----------|
+| ≈ 0,1 kWh | Teelicht |
+| 1 kWh | Staubsauger 1 Stunde |
+| ≈ 3 000 kWh | Haushaltsstrom pro Jahr |
+| ≈ 15 000 kWh | Heizwärme Einfamilienhaus pro Jahr |
+| ≈ 2,4 · 10¹² kWh | Deutschland pro Jahr, Endenergie |
+| ≈ 1,7 · 10¹⁴ kWh | Welt pro Jahr, Primärenergie |
 
 | Leistung | Beispiel |
 |----------|----------|
-| 25 W | Kerze |
-| 100 W | Glühbirne ≈ ruhender Erwachsener („100-W-Heizkörper“) |
-| 100 W | Kühlschrank (Mittelwert über Ein/Aus-Taktung) |
-| 150 W | Arbeitsplatz mit zwei Monitoren |
-| 2 kW | Wasserkocher (≈ Steckdosen-Obergrenze) |
-| 9 kW | Heizlast gut gedämmtes EFH bei ≈ −12 °C |
-| 8 kW | Hörsaal · 100 Studierende (sommerliche Kühllast) |
-| 30 MW | Enercity Großwärmepumpe Herrenhausen (~3 000 EFH) |
+| ≈ 30 W | Teelicht |
+| ≈ 100 W | Mensch in Ruhe (≈ 70 W sensibel + 30 W latent) |
+| ≈ 1 kW | Staubsauger |
+| ≈ 8 kW | Einfamilienhaus, kältester Tag |
+| ≈ 100 kW | Auto |
+| ≈ 5 MW | Windrad |
+| ≈ 1,4 GW | Kraftwerksblock |
+| ≈ 9 TW | alle Kraftwerke der Welt (installiert) |
 
-Von Kerze bis Kraftwerk: Faktor **> 1 000 000**.
-
-### Energie-Leiter (kWh-Skalen)
-
-| Einheit | Größenordnung |
-|---------|---------------|
-| Wh | Handy laden |
-| kWh | Haushalt · Stunden |
-| MWh | Straßenzug |
-| GWh | Stadtquartier |
+| Nutzwärme aus 1 kWh Endenergie | Wert |
+|--------------------------------|------|
+| Holzhackschnitzel | ≈ 0,85 |
+| Heizöl Brennwert | ≈ 0,94 |
+| Erdgas Brennwert | ≈ 0,96 |
+| Elektroheizstab | 1,0 |
+| Luft-Wärmepumpe (JAZ) | ≈ 3 |
+| Erd-Wärmepumpe (JAZ) | ≈ 4 |
 
 ### Merksätze
 
-- Geschlossener Raum → **Bauphysik** übernimmt: Winter Wärmeverlust, Sommer Überhitzung — **dieselben Watt, umgekehrtes Vorzeichen**.
-- Vier Wörter lernen: **Kraft (N) · Arbeit/Energie (J) · Leistung (W) · Alltag (kWh)**.
-- Typische Verwechslung: Kessel **24 kWh** statt **24 kW**; Jahresverbrauch **12 000 kW/a** statt **12 000 kWh/a**.
-- **kW = Rohr** (Rate jetzt), **kWh = Eimer** (Menge über Zeit); Anschluss **15 kW** ≠ Verbrauch **18 000 kWh/a**.
-- Leistung = **Tacho**, Energie = **zurückgelegte Strecke** (aufgesummelte Joule).
-- Fast jedes Watt Strom im Gebäude endet als **thermische Last** — im Januar Gewinn, im Juli Last.
-- Wärmepumpe **erzeugt** keine Wärme, sie **transportiert** Umweltwärme; Bilanz: 1 + 3 = 4.
-- Heizstab: COP = 1; Luft-WP übers Jahr: **JAZ ≈ 3** (Hannover).
-- **kW_el** = bezahlt am Zähler, **kW_th** = Wärme im Haus.
-- Nächste Schritte: **Heizlast** (kW, DIN EN 12831) → **Heizwärmebedarf** (kWh/m²a, DIN V 18599); Normierung auf m² zum Vergleich beliebiger Gebäude.
+- Im Alltag ist die **kWh** die wichtigste Größe — eine Energiemenge. Das „h“ nicht weglassen.
+- **Leistung × Zeit = Fläche = Energie**; dieselbe kWh kann schnell (Dusche, 20 kW) oder langsam (Staubsauger, 1 kW) fließen.
+- Fast jedes Watt im Gebäude endet als **Wärme** — im Winter Gewinn, im Sommer Last.
+- Die Wärmepumpe **verschiebt** Umweltwärme; Brennstoffe verlieren einen Teil mit dem Abgas.
+- Glas lässt **kurzwellig** hinein und hält **langwellig** zurück — Sonnenschutz gehört nach außen.
+- Die **Decke** ist der wirksamste Speicher: frei, von warmer Luft angeströmt, im Strahlungsaustausch mit allen Flächen.
+- **Latente** Wärme ist unsichtbar, aber groß; kühle Flächen unter dem Taupunkt bekommen Tauwasser.
+- Lage und Größe der **Öffnungen** steuern den Luftstrom; jeder m³ trägt Wärme mit.
+- Am Ende steckt in jedem Joule eine **Kraft über einen Weg** — ein Herzschlag ≈ 1 J, einer pro Sekunde ≈ 1 W.
 
 ---
 

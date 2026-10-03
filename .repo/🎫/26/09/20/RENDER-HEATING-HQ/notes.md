@@ -24,6 +24,13 @@ Command:
 
 Finished 2026-09-20, ~20 min, exit 0.
 
-- 1920×1080 @ 60 fps, H.264, no audio stream
-- 1522.9 s (~25:23), 7 clips: intro + Modul 1–5 + final
+## 2026-09-20 force re-render
+
+Beat 3 convection changed. Re-render intro + all 6 sections at `-qh` 1080p60, `--force --disable_caching`, silent ffmpeg concat.
+
+Finished 2026-09-20 force re-render, ~12 min, exit 0.
+
+- 1920×1080 @ 60 fps, H.264, no audio
+- ~25:17, 7 clips: intro + Modul 1–5 + final
 - Deliverable: `tutorial/energy/demand/Heating/rendered/Full_Heating_Demand_NoAudio_1080p60.mp4`
+

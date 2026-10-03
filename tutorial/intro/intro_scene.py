@@ -288,10 +288,10 @@ class Demo_Intro_Heizlast(NGSIntro):
 
 
 class Demo_Intro_PhysikalischeGrundlagen(NGSIntro):
-    """⚛️ Series intro for Physical Fundamentals — force, power, energy."""
+    """⚛️ Series intro for Physical Fundamentals — energy, power, heat and air in the building."""
 
     topic_de = "Physikalische Grundlagen"
-    topic_explain_de = "Kraft, Leistung und Energie."
+    topic_explain_de = "Energie, Leistung, Wärme und Luft im Gebäude."
     series_de = "Gebäudeenergie · Grundlagen"
 
 

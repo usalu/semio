@@ -1,0 +1,26 @@
+{
+  "id": "2026/09/20/RENDER-COOLING-HQ",
+  "title": "Render Cooling Hq",
+  "slug": "RENDER-COOLING-HQ",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Render Cooling series intro plus Teile 1–6 at 1080p60 and merge into one silent video.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {
+    "due": "2026-09-20",
+    "started": "2026-09-20",
+    "completed": "2026-09-20"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4-6",
+  "summary": "Stripped audio from the merged Cooling 1080p60 series. Main deliverable is silent H.264, ~27:29, matching Heating and EnergyBalance.",
+  "files": {
+    "created": [
+      "tutorial/energy/demand/Cooling/rendered/Full_Cooling_Demand_NoAudio_1080p60.mp4"
+    ],
+    "updated": [
+      "tutorial/energy/demand/Cooling/rendered/Full_Cooling_Demand_1080p60.mp4",
+      "tutorial/energy/demand/Cooling/media/videos/full_cooling_video/1080p60/FullCoolingDemandVideo.mp4"
+    ]
+  }
+}

@@ -329,17 +329,15 @@ def compose_full_heating_video(
         clips.append(intro_existing)
     else:
         print(f"\n=== Rendering intro {SERIES_INTRO_SCENE} ===")
-        subprocess.run(
-            [
-                str(manim),
-                quality_flag,
-                "--media_dir", str(media_dir),
-                str(_INTRO_SCRIPT),
-                SERIES_INTRO_SCENE,
-            ],
-            check=True,
-            cwd=str(_SEMIO_ROOT),
-        )
+        intro_cmd = [
+            str(manim),
+            quality_flag,
+            "--media_dir", str(media_dir),
+        ]
+        if force:
+            intro_cmd.append("--disable_caching")
+        intro_cmd.extend([str(_INTRO_SCRIPT), SERIES_INTRO_SCENE])
+        subprocess.run(intro_cmd, check=True, cwd=str(_SEMIO_ROOT))
         clips.append(_find_named_mp4(media_dir, SERIES_INTRO_SCENE, quality_flag))
     # endregion
 
@@ -371,9 +369,10 @@ def compose_full_heating_video(
             str(manim),
             quality_flag,
             "--media_dir", str(media_dir),
-            str(Path(__file__).resolve()),
-            name,
         ]
+        if force:
+            cmd.append("--disable_caching")
+        cmd.extend([str(Path(__file__).resolve()), name])
         subprocess.run(cmd, check=True, cwd=str(_SEMIO_ROOT))
         clips.append(_find_section_mp4(media_dir, name, quality_flag))
 

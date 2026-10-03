@@ -238,14 +238,21 @@ class FullEnergyBalanceVideo(Scene):
 
 
 #region Compose (recommended)
-def _manim_bin() -> Path:
-    """🛠️ Repo venv manim, else PATH manim."""
-    candidate = _SEMIO_ROOT / ".venv" / "bin" / "manim"
-    if candidate.is_file():
-        return candidate
+def _manim_cmd() -> list[str]:
+    """🛠️ Isolated cache manim, else repo venv, else PATH."""
+    cache_venv = Path.home() / "Library" / "Caches" / "semio-manim" / "venv" / "bin"
+    cache_cli = cache_venv / "manim"
+    cache_py = cache_venv / "python"
+    if cache_cli.is_file():
+        return [str(cache_cli)]
+    if cache_py.is_file():
+        return [str(cache_py), "-m", "manim"]
+    repo_cli = _SEMIO_ROOT / ".venv" / "bin" / "manim"
+    if repo_cli.is_file():
+        return [str(repo_cli)]
     which = shutil.which("manim")
     if which:
-        return Path(which)
+        return [which]
     raise FileNotFoundError("manim not found — activate .venv or install Manim")
 
 
@@ -270,7 +277,7 @@ def _find_named_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Path
         reverse=True,
     )
     for match in matches:
-        if match.stat().st_size > 1000:
+        if folder in match.parts and match.stat().st_size > 1000:
             return match
     raise FileNotFoundError(f"Rendered mp4 not found for {scene_name} under {media_dir}")
 
@@ -293,7 +300,7 @@ def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
         "ffmpeg", "-y",
         "-f", "concat", "-safe", "0",
         "-i", str(list_path),
-        "-c", "copy",
+        "-c:v", "copy", "-an",
         str(output),
     ]
     subprocess.run(cmd, check=True)
@@ -309,7 +316,7 @@ def compose_full_energy_balance_video(
 ) -> Path:
     """🎬 Render series intro + each chapter with Manim, then merge into one series mp4."""
     media_dir = media_dir or (_SERIES_ROOT / "media")
-    manim = _manim_bin()
+    manim = _manim_cmd()
     clips: list[Path] = []
 
     #region Series Intro
@@ -334,7 +341,7 @@ def compose_full_energy_balance_video(
         print(f"\n=== Rendering intro {SERIES_INTRO_SCENE} ===")
         subprocess.run(
             [
-                str(manim),
+                *manim,
                 quality_flag,
                 "--media_dir", str(media_dir),
                 str(_INTRO_SCRIPT),
@@ -371,7 +378,7 @@ def compose_full_energy_balance_video(
 
         print(f"\n=== Rendering {name} ===")
         cmd = [
-            str(manim),
+            *manim,
             quality_flag,
             "--media_dir", str(media_dir),
             str(Path(__file__).resolve()),
@@ -385,12 +392,15 @@ def compose_full_energy_balance_video(
     output = out_dir / "FullEnergyBalanceVideo.mp4"
     list_path = out_dir / "chapter_concat_list.txt"
     rendered_copy = _SERIES_ROOT / "rendered" / f"Full_EnergyBalance_{folder}.mp4"
-    print(f"\n=== Merging {len(clips)} clips (intro + chapters) → {output.name} ===")
+    noaudio_copy = _SERIES_ROOT / "rendered" / f"Full_EnergyBalance_NoAudio_{folder}.mp4"
+    print(f"\n=== Merging {len(clips)} silent clips (intro + chapters) → {output.name} ===")
     _ffmpeg_concat(clips, output, list_path)
     rendered_copy.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(output, rendered_copy)
+    shutil.copy2(output, noaudio_copy)
     print(f"\n✅ Single full video: {output}")
     print(f"✅ Copy:  {rendered_copy}")
+    print(f"✅ Copy:  {noaudio_copy}")
 
     if play:
         opener = {"darwin": "open", "win32": "start"}.get(sys.platform, "xdg-open")

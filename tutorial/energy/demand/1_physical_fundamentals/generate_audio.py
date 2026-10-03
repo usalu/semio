@@ -21,16 +21,7 @@ if str(_TUTORIAL_ROOT) not in sys.path:
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from scene_1 import (  # noqa: E402
-    Beat1_UnsichtbareDimension,
-    Beat2_KraftUndArbeit,
-    Beat3_ArbeitZuLeistung,
-    Beat4_Kilowattstunde,
-    Beat5_Groessenordnungen,
-    Beat6_Energieerhaltung,
-    Beat7_Waermepumpe,
-    Beat8_Ausblick,
-)
+from scene_1 import BEATS  # noqa: E402
 from tts_pipeline import (  # noqa: E402
     assemble_aligned_track,
     configure_tutorial_tts,
@@ -40,17 +31,6 @@ from tts_pipeline import (  # noqa: E402
     synthesize_clause_audio,
     write_vo_timing_manifest,
 )
-
-BEATS = [
-    Beat1_UnsichtbareDimension,
-    Beat2_KraftUndArbeit,
-    Beat3_ArbeitZuLeistung,
-    Beat4_Kilowattstunde,
-    Beat5_Groessenordnungen,
-    Beat6_Energieerhaltung,
-    Beat7_Waermepumpe,
-    Beat8_Ausblick,
-]
 
 SCENE_FILE = BASE_DIR / "scene_1.py"
 TIMING_MANIFEST = BASE_DIR / "vo_timing.json"

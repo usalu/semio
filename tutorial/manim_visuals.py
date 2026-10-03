@@ -260,7 +260,7 @@ def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = No
     if ratio >= 0.85 and ratio <= 1.15:
         compare_line = f"≈ 1× {name} ({device_w} W)"
     elif ratio < 1:
-        compare_line = f"≈ {ratio:.1f}× {name} ({device_w} W)"
+        compare_line = f"≈ {ratio:.1f}× {name} ({device_w} W)".replace(".", ",")
     else:
         compare_line = f"≈ {ratio:.0f}× {name} ({device_w} W)"
 
@@ -355,9 +355,10 @@ def animate_flows(
 ):
     """💨 Several coloured streams at once — e.g. warm exhaust + cold intake exchanging.
 
-    ``streams`` is an iterable of ``(paths, color)`` or ``(paths, color, color_end)``.
-    Playing them in one ``scene.play`` is what makes a buoyancy loop look like a
-    real exchange instead of two sequential crossings.
+    ``streams`` is ``(paths, color)``, ``(paths, color, color_end)``,
+    ``(paths, color, color_end, closed)``, then optional ``cycles``,
+    ``color_by`` (``"t"`` along the path or ``"y"`` by height) and ``cool``
+    (shift the fill toward cold as the play progresses).
     """
     from manim import (
         Dot, Ellipse, ManimColor, UpdateFromAlphaFunc, VGroup,
@@ -369,9 +370,17 @@ def animate_flows(
     for entry in streams:
         paths, color = entry[0], entry[1]
         color_end = entry[2] if len(entry) > 2 else None
+        stream_closed = entry[3] if len(entry) > 3 else closed
+        stream_cycles = entry[4] if len(entry) > 4 else cycles
+        color_by = entry[5] if len(entry) > 5 else "t"
+        cool = entry[6] if len(entry) > 6 else False
         start_c = ManimColor(color)
         end_c = ManimColor(color_end) if color_end else start_c
+        cold_c = ManimColor(P_BLUE)
         for path in paths:
+            y_bot = float(path.get_bottom()[1])
+            y_top = float(path.get_top()[1])
+            y_span = max(1e-6, y_top - y_bot)
             for w in range(waves):
                 if streak:
                     particle = Ellipse(
@@ -386,15 +395,27 @@ def animate_flows(
                     particle.set_fill(color, opacity=0.0)
                 particle.move_to(path.point_from_proportion(0.0))
                 dots.add(particle)
-                meta.append((path, w / waves, start_c, end_c, streak, closed))
+                meta.append((
+                    path, w / waves, start_c, end_c, streak, stream_closed,
+                    stream_cycles, color_by, y_bot, y_span, cool, cold_c,
+                ))
 
     def update(group, alpha):
-        for particle, (path, offset, start_c, end_c, is_streak, is_closed) in zip(group, meta):
-            t = (alpha * cycles + offset) % 1.0
+        for particle, (
+            path, offset, start_c, end_c, is_streak, is_closed,
+            stream_cycles, color_by, y_bot, y_span, cool, cold_c,
+        ) in zip(group, meta):
+            t = (alpha * stream_cycles + offset) % 1.0
             pos = path.point_from_proportion(t)
             particle.move_to(pos)
             fade = 1.0 if is_closed else min(1.0, t / 0.08, (1.0 - t) / 0.10)
-            fill = interpolate_color(start_c, end_c, t)
+            if color_by == "y":
+                u = float(np.clip((pos[1] - y_bot) / y_span, 0.0, 1.0))
+                fill = interpolate_color(start_c, end_c, u)
+            else:
+                fill = interpolate_color(start_c, end_c, t)
+            if cool:
+                fill = interpolate_color(fill, cold_c, 0.55 * alpha)
             if is_streak:
                 eps = 0.02
                 if is_closed:
@@ -869,9 +890,10 @@ def formula_panel(row, *, color: str = P_TEAL, edge_buff: float = FORMULA_PANEL_
 
     row.to_edge(DOWN, buff=edge_buff)
     row.set_x(0)
-    for fragment in row.submobjects:
+    for fragment in row.get_family():
         fragment._layout_zone = "formula"
     box = SurroundingRectangle(row, color=color, buff=0.22, corner_radius=0.1, stroke_width=2)
+    box._layout_zone = "formula_box"
     return row, box
 
 
@@ -879,7 +901,350 @@ def highlight_param(items: dict, key: str, *, color: str = P_ORANGE):
     """🔦 Ring for one named formula fragment — play it while the narration names that parameter."""
     from manim import SurroundingRectangle
 
-    return SurroundingRectangle(items[key], color=color, buff=0.08, stroke_width=3, corner_radius=0.05)
+    ring = SurroundingRectangle(items[key], color=color, buff=0.08, stroke_width=3, corner_radius=0.05)
+    ring._layout_zone = getattr(items[key], "_layout_zone", "")
+    return ring
+#endregion
+
+
+#region Math typesetting
+# Formulas and units set from a LaTeX subset — real sub-/superscripts, stacked
+# fractions, dot accents, italic variables and upright units — assembled from
+# ``Text`` glyph runs aligned on a shared baseline. No TeX distribution is
+# needed on any platform, and the face matches every other label.
+#
+# Supported: ``x_{i}``, ``x^{2}``, ``\frac{a}{b}``, ``\dot{Q}``, ``\mathrm{kWh}``,
+# ``\text{mit Leerzeichen}``, ``\textcolor{#HEX}{…}``, spaces ``\, \; \quad \!``,
+# ``{,}`` for a decimal comma, and the symbols in ``_MATH_SYMBOLS``.
+_MATH_SCRIPT_SCALE = 0.66
+_MATH_FRAC_SCALE = 0.86
+_MATH_SYMBOLS = {
+    "cdot": "·", "approx": "≈", "times": "×", "to": "→", "Rightarrow": "⇒", "uparrow": "↑",
+    "pm": "±", "le": "≤", "ge": "≥",
+    "Delta": "Δ", "Sigma": "Σ", "eta": "η", "varphi": "φ", "phi": "φ", "rho": "ρ",
+    "lambda": "λ", "theta": "θ", "vartheta": "ϑ", "mu": "μ", "infty": "∞", "%": "%",
+    "Phi": "Φ", "Psi": "Ψ", "psi": "ψ", "chi": "χ", "ldots": "…",
+}
+_MATH_SPACES = {",": 0.17, ";": 0.28, "quad": 1.0, "!": -0.08}
+_MATH_RELATIONS = frozenset("=≈+−·×→⇒≤≥±")
+_MATH_METRICS: dict[float, dict[str, float]] = {}
+
+
+def _math_metrics(size: float) -> dict[str, float]:
+    """📏 Cap height and math-axis height for one font size, measured once."""
+    if size not in _MATH_METRICS:
+        from manim_fonts import body_text
+
+        probe = body_text("H−", font_size=size, color=P_WHITE)
+        cap = probe[0].height
+        axis = probe[1].get_center()[1] - probe[0].get_bottom()[1]
+        _MATH_METRICS[size] = {"cap": cap, "axis": axis, "em": cap / 0.69}
+    return _MATH_METRICS[size]
+
+
+def _math_parse(src: str):
+    """🌳 Parse the LaTeX subset into ``(kind, …)`` nodes."""
+    pos = 0
+
+    def read_group_src() -> str:
+        nonlocal pos
+        while pos < len(src) and src[pos] == " ":
+            pos += 1
+        if pos < len(src) and src[pos] == "{":
+            depth, start = 0, pos
+            while pos < len(src):
+                if src[pos] == "{":
+                    depth += 1
+                elif src[pos] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        pos += 1
+                        return src[start + 1:pos - 1]
+                pos += 1
+            raise ValueError(f"unbalanced braces in {src!r}")
+        if pos < len(src) and src[pos] == "\\":
+            start = pos
+            pos += 1
+            while pos < len(src) and src[pos].isalpha():
+                pos += 1
+            return src[start:pos] if pos > start + 1 else src[start:pos + 1]
+        ch = src[pos]
+        pos += 1
+        return ch
+
+    def sub(text: str, *, upright: bool, color, keep_spaces: bool):
+        return _math_parse_items(text, upright=upright, color=color, keep_spaces=keep_spaces)
+
+    def parse(*, upright: bool, color, keep_spaces: bool):
+        nonlocal pos
+        items: list = []
+        while pos < len(src):
+            ch = src[pos]
+            if ch in "_^":
+                pos += 1
+                script = sub(read_group_src(), upright=upright, color=color, keep_spaces=False)
+                base = items.pop() if items else ("group", [])
+                if base[0] == "scripts":
+                    base = list(base)
+                    base[2 if ch == "_" else 3] = script
+                    items.append(tuple(base))
+                else:
+                    items.append(("scripts", base, script if ch == "_" else None, script if ch == "^" else None))
+                continue
+            if ch == "{":
+                items.append(("group", sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces)))
+                continue
+            if ch == "\\":
+                pos += 1
+                if pos < len(src) and not src[pos].isalpha():
+                    sym = src[pos]
+                    pos += 1
+                    items.append(("space", _MATH_SPACES[sym]) if sym in _MATH_SPACES else ("char", sym, False, color))
+                    continue
+                start = pos
+                while pos < len(src) and src[pos].isalpha():
+                    pos += 1
+                cmd = src[start:pos]
+                if cmd == "frac":
+                    num = sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces)
+                    den = sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces)
+                    items.append(("frac", num, den, color))
+                elif cmd == "dot":
+                    items.append(("dot", sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces), color))
+                elif cmd == "mathrm":
+                    items.append(("group", sub(read_group_src(), upright=True, color=color, keep_spaces=False)))
+                elif cmd == "text":
+                    items.append(("group", sub(read_group_src(), upright=True, color=color, keep_spaces=True)))
+                elif cmd == "textcolor":
+                    new_color = read_group_src()
+                    items.append(("group", sub(read_group_src(), upright=upright, color=new_color, keep_spaces=keep_spaces)))
+                elif cmd in _MATH_SPACES:
+                    items.append(("space", _MATH_SPACES[cmd]))
+                elif cmd in _MATH_SYMBOLS:
+                    items.append(("char", _MATH_SYMBOLS[cmd], False, color))
+                else:
+                    raise ValueError(f"unsupported math command \\{cmd} in {src!r}")
+                continue
+            pos += 1
+            if ch == " ":
+                if keep_spaces:
+                    items.append(("space", 0.26))
+                continue
+            if ch == "-":
+                ch = "−"
+            items.append(("char", ch, not upright and ch.isascii() and ch.isalpha(), color))
+        return items
+
+    return parse
+
+
+def _math_parse_items(src: str, *, upright: bool = False, color=None, keep_spaces: bool = False) -> list:
+    return _math_parse(src)(upright=upright, color=color, keep_spaces=keep_spaces)
+
+
+def _math_merge_runs(items: list) -> list:
+    """🔗 Fuse neighbouring same-style characters into one kerned run; a script base absorbs its run."""
+    def is_run_char(item) -> bool:
+        return item[0] == "char" and item[1] not in _MATH_RELATIONS
+
+    merged: list = []
+    for item in items:
+        if item[0] == "scripts" and item[1][0] == "char" and is_run_char(item[1]):
+            text, italic, color = item[1][1], item[1][2], item[1][3]
+            while merged and merged[-1][0] == "run" and merged[-1][2] == italic and merged[-1][3] == color:
+                text = merged.pop()[1] + text
+            item = ("scripts", ("run", text, italic, color), item[2], item[3])
+        if is_run_char(item):
+            if merged and merged[-1][0] == "run" and merged[-1][2] == item[2] and merged[-1][3] == item[3]:
+                merged[-1] = ("run", merged[-1][1] + item[1], item[2], item[3])
+            else:
+                merged.append(("run", item[1], item[2], item[3]))
+            continue
+        merged.append(item)
+    return merged
+
+
+def _math_box(content, baseline_left):
+    """📦 Wrap mobjects with an invisible baseline marker so parents can align on it."""
+    from manim import VectorizedPoint, VGroup
+
+    marker = VectorizedPoint(np.array(baseline_left, dtype=float))
+    box = VGroup(*content, marker)
+    box.base = marker
+    return box
+
+
+def _math_baseline(box) -> float:
+    return float(box.base.get_center()[1])
+
+
+def _math_render(items: list, size: float, color: str):
+    """🧱 Lay out a node list on one baseline at ``y = 0``."""
+    from manim import Dot, ITALIC, Line, RIGHT, UP, VGroup
+    from manim_fonts import body_text
+
+    m = _math_metrics(size)
+    cap, em = m["cap"], m["em"]
+    boxes: list = []
+    gaps: list[float] = []
+    pending_gap = 0.0
+
+    for item in _math_merge_runs(items):
+        kind = item[0]
+        if kind == "space":
+            pending_gap += item[1] * em
+            continue
+        if kind == "char":
+            glyph_color = item[3] or color
+            probe = body_text("H" + item[1], font_size=size, color=glyph_color)
+            base_y = probe[0].get_bottom()[1]
+            probe.remove(probe[0])
+            probe.text = item[1]
+            box = _math_box([probe], [probe.get_left()[0], base_y, 0.0])
+            relation = item[1] in _MATH_RELATIONS and bool(boxes)
+            pad = 0.24 * em if relation else 0.0
+            gaps.append(pending_gap + (pad if boxes else 0.0))
+            boxes.append(box)
+            pending_gap = pad
+            continue
+        if kind == "run":
+            glyph_color = item[3] or color
+            extra = {"slant": ITALIC} if item[2] else {}
+            probe = body_text("H" + item[1], font_size=size, color=glyph_color, **extra)
+            base_y = probe[0].get_bottom()[1]
+            probe.remove(probe[0])
+            probe.text = item[1]
+            box = _math_box([probe], [probe.get_left()[0], base_y, 0.0])
+        elif kind == "group":
+            box = _math_render(item[1], size, color)
+        elif kind == "frac":
+            frac_color = item[3] or color
+            num = _math_render(item[1], size * _MATH_FRAC_SCALE, frac_color)
+            den = _math_render(item[2], size * _MATH_FRAC_SCALE, frac_color)
+            width = max(num.width, den.width) + 0.16 * cap
+            thick = max(1.2, size / 14.0)
+            bar = Line(np.array([0.0, m["axis"], 0.0]), np.array([width, m["axis"], 0.0]),
+                       color=frac_color, stroke_width=thick)
+            num.move_to(np.array([width / 2, 0.0, 0.0]), coor_mask=np.array([1, 0, 0]))
+            num.shift(UP * (m["axis"] + 0.20 * cap - num.get_bottom()[1]))
+            den.move_to(np.array([width / 2, 0.0, 0.0]), coor_mask=np.array([1, 0, 0]))
+            den.shift(UP * (m["axis"] - 0.22 * cap - den.get_top()[1]))
+            box = _math_box([num, bar, den], [0.0, 0.0, 0.0])
+            gaps.append(pending_gap + (0.08 * em if boxes else 0.0))
+            boxes.append(box)
+            pending_gap = 0.08 * em
+            continue
+        elif kind == "dot":
+            dot_color = item[2] or color
+            inner = _math_render(item[1], size, color)
+            accent = Dot(radius=max(0.018, 0.09 * cap), color=dot_color)
+            accent.move_to(np.array([inner.get_center()[0] + 0.06 * cap, inner.get_top()[1] + 0.22 * cap, 0.0]))
+            box = _math_box([inner, accent], [inner.get_left()[0], _math_baseline(inner), 0.0])
+        elif kind == "scripts":
+            base = _math_render([item[1]], size, color)
+            bl = _math_baseline(base)
+            x0 = base.get_right()[0] + 0.05 * cap
+            parts = [base]
+            sup_bottom = None
+            if item[3] is not None:
+                sup = _math_render(item[3], size * _MATH_SCRIPT_SCALE, color)
+                lift = max(0.62 * cap, base.get_top()[1] - bl - 0.45 * cap)
+                sup.shift(np.array([x0 - sup.get_left()[0], bl + lift - _math_baseline(sup), 0.0]))
+                sup_bottom = sup.get_bottom()[1]
+                parts.append(sup)
+            if item[2] is not None:
+                sb = _math_render(item[2], size * _MATH_SCRIPT_SCALE, color)
+                drop = 0.34 * cap
+                sb.shift(np.array([x0 - sb.get_left()[0], bl - drop - _math_baseline(sb), 0.0]))
+                if sup_bottom is not None and sb.get_top()[1] > sup_bottom - 0.12 * cap:
+                    sb.shift(UP * (sup_bottom - 0.12 * cap - sb.get_top()[1]))
+                parts.append(sb)
+            box = _math_box(parts, [base.get_left()[0], bl, 0.0])
+        else:
+            raise ValueError(f"unknown math node {kind!r}")
+        gaps.append(pending_gap + (0.03 * cap if boxes and kind == "run" else 0.0))
+        boxes.append(box)
+        pending_gap = 0.0
+
+    cursor = 0.0
+    for box, gap in zip(boxes, gaps):
+        box.shift(np.array([cursor + gap - box.get_left()[0], -_math_baseline(box), 0.0]))
+        cursor = box.get_right()[0]
+    return _math_box(boxes or [VGroup()], [0.0, 0.0, 0.0])
+
+
+def math_text(src: str, *, font_size: float | None = None, color: str = P_WHITE):
+    """∑ Typeset a LaTeX-subset formula or unit with real indices, exponents and fractions."""
+    from manim_fonts import BODY_FONT_SIZE
+
+    return _math_render(_math_parse_items(src), float(font_size or BODY_FONT_SIZE), color)
+
+
+def math_row(parts, *, font_size: int | None = None, color: str = P_WHITE, buff: float = 0.15):
+    """🧮 ``equation_row`` for typeset fragments — ``(key, latex, colour)`` parts on one shared baseline."""
+    from manim_fonts import FORMULA_FONT_SIZE
+
+    size = float(font_size or FORMULA_FONT_SIZE)
+    items: dict[str, object] = {}
+    boxes = []
+    for key, src, part_color in parts:
+        box = math_text(src, font_size=size, color=part_color or color)
+        boxes.append(box)
+        if key:
+            items[key] = box
+    cursor = 0.0
+    for box in boxes:
+        box.shift(np.array([cursor - box.get_left()[0], -_math_baseline(box), 0.0]))
+        cursor = box.get_right()[0] + buff
+    return _math_box(boxes, [0.0, 0.0, 0.0]), items
+#endregion
+
+
+#region Typeset readouts
+# Labels, live numbers and formula panels on top of ``math_text``. A readout is
+# redrawn every frame from the tracker or geometry it belongs to, so a value
+# counts up from zero while its drawing grows instead of swapping in finished.
+PANEL_MAX_WIDTH: float = 11.6
+
+
+def de_num(value: float, digits: int = 0) -> str:
+    """🔢 German number for ``math_text`` — decimal comma, thin-space thousands."""
+    return f"{value:,.{digits}f}".replace(",", r"\,").replace(".", "{,}")
+
+
+def place_math(mob, at, edge: str = "center"):
+    """📌 Sit a typeset box on a baseline point; ``edge`` picks which side lands on ``at``."""
+    at = np.array(at, dtype=float)
+    x = {"left": mob.get_left()[0], "right": mob.get_right()[0], "center": mob.get_center()[0]}[edge]
+    mob.shift(np.array([at[0] - x, at[1] - mob.base.get_center()[1], 0.0]))
+    return mob
+
+
+def math_label(src: str, at=None, *, size: float | None = None, color: str = P_WHITE, edge: str = "center"):
+    """🏷️ Typeset label, optionally placed on a baseline point."""
+    mob = math_text(src, font_size=size, color=color)
+    return place_math(mob, at, edge) if at is not None else mob
+
+
+def math_readout(fn, at, *, size: float | None = None, color: str = P_WHITE, edge: str = "left"):
+    """📟 Live typeset label redrawn every frame from ``fn()``.
+
+    https://docs.manim.community/en/stable/reference/manim.animation.updaters.mobject_update_utils.html
+    """
+    from manim import always_redraw
+
+    return always_redraw(lambda: math_label(fn(), np.array(at() if callable(at) else at, dtype=float),
+                                            size=size, color=color, edge=edge))
+
+
+def math_panel(parts, *, color: str = P_TEAL, size: float | None = None,
+               edge_buff: float = FORMULA_PANEL_EDGE_BUFF, buff: float = 0.18):
+    """🧮 Typeset formula in the fixed bottom panel, shrunk only when it would overrun the frame."""
+    row, items = math_row(parts, font_size=size, buff=buff)
+    if row.width > PANEL_MAX_WIDTH:
+        row.scale(PANEL_MAX_WIDTH / row.width)
+    row, box = formula_panel(row, color=color, edge_buff=edge_buff)
+    return row, box, items
 #endregion
 
 
@@ -938,6 +1303,7 @@ def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WH
         stroke_width=0,
     )
     bg.move_to(label.get_center())
+    bg._layout_zone = "caption_box"
     group = VGroup(bg, label)
     group.to_edge(DOWN, buff=CAPTION_EDGE_BUFF)
     group.set_x(0)

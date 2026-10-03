@@ -6,7 +6,8 @@ Repo MCP was unavailable. Beat 3 particles were three vertical film lines. Repla
 
 Beat 3 now uses closed buoyancy cells in the air films: **innen** rises at the warm wall and sinks on the return; **außen** sinks at the cold wall and rises on the return. Particles loop continuously (`closed=True`).
 
-Re-rendered `Heating_01_Introduction` at 1080p60 and silent-concatenated the series.
+Indoor parcels are **warm at the top, cold at the floor**. Außen feed joins at **mid-height**, slowly, and the indoor fill cools as they arrive.
+
 
 Deliverable: `tutorial/energy/demand/Heating/rendered/Full_Heating_Demand_NoAudio_1080p60.mp4`
 

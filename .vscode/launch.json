@@ -921,7 +921,7 @@
       "name": "🛠️dev🎬manim heating full",
       "type": "node-terminal",
       "request": "launch",
-      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Heating/full_heating_video.py -q h --no-play --force",
+      "command": "PY=\"$HOME/Library/Caches/semio-manim/venv/bin/python\"; [ -x \"$PY\" ] || PY=\"${workspaceFolder}/.venv/bin/python\"; \"$PY\" tutorial/energy/demand/Heating/full_heating_video.py -q h --no-play --force",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -943,7 +943,7 @@
       "name": "🛠️dev🎬manim physical fundamentals",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run manim -pql tutorial/energy/demand/1_physical_fundamentals/scene_1.py Beat1_UnsichtbareDimension",
+      "command": "uv run manim -pql tutorial/energy/demand/1_physical_fundamentals/scene_1.py Beat1_EnergieImAlltag",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -959,6 +959,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 209
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim energy balance full",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "PY=\"$HOME/Library/Caches/semio-manim/venv/bin/python\"; [ -x \"$PY\" ] || PY=\"${workspaceFolder}/.venv/bin/python\"; \"$PY\" tutorial/energy/demand/EnergyBalance/full_energy_balance_video.py -q h --no-play --force",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 210
       }
     },
     {
