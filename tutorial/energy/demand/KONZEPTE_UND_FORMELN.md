@@ -158,8 +158,8 @@ Die drei Wärmeübertragungsmechanismen an derselben Gebäudewand verstehen und 
 | Begriff | Definition |
 |---------|------------|
 | **Wärmeleitung (Q̇_k)** | Energie wandert durch festes Material; Moleküle bleiben am Platz |
-| **Konvektion (Q̇_c)** | Wärme wird von **bewegter Luft** transportiert (Luft verlässt das Gebäude) |
-| **Strahlung (Q̇_r)** | Infrarotwellen, **kein Medium** nötig (Sonne, Wand-zu-Wand) |
+| **Konvektion (Q̇_c)** | **Bewegte Luft** trägt Wärme: am Heizkörper erwärmt, an der kalten Wand abgekühlt; außen nimmt der Wind sie mit |
+| **Strahlung (Q̇_r)** | Infrarotwellen von Fläche zu Fläche, **kein Medium** nötig (Heizkörper → Wand, Außenwand → Nachthimmel) |
 | **Δθ** | Temperaturdifferenz — einziger Antrieb des Wärmestroms (warm → kalt) |
 | **Wärmedurchlasswiderstand R** | Bremswirkung einer Schicht [m²·K/W] |
 | **U-Wert** | Kehrwert des Gesamtwiderstands — wie leicht Wärme hindurchkommt [W/(m²·K)] |
@@ -169,7 +169,7 @@ Die drei Wärmeübertragungsmechanismen an derselben Gebäudewand verstehen und 
 
 | Formel | Bedeutung |
 |--------|-----------|
-| **Q̇_ges = Q̇_k + Q̇_c + Q̇_r** | Gesamtwärmestrom über ein Bauteil |
+| **Q̇_c,i + Q̇_r,i = Q̇_k = Q̇_c,e + Q̇_r,e** | Derselbe Wärmestrom durchläuft Innenoberfläche, Wand und Außenoberfläche nacheinander |
 | **R = d / λ** | Widerstand einer Schicht |
 | **R_ges = R_si + Σ(d/λ) + R_se** | Gesamtwiderstand inkl. Oberflächenwiderständen |
 | **U = 1 / R_ges** | U-Wert |
@@ -179,6 +179,7 @@ Die drei Wärmeübertragungsmechanismen an derselben Gebäudewand verstehen und 
 
 - Energie wandert **nur von warm nach kalt** (2. Hauptsatz).
 - DIN EN ISO 6946 fasst Leitung, Konvektion und Strahlung zu **einem U-Wert** pro Bauteil zusammen.
+- Temperatur fällt in Stufen: 20 °C Luft → 16,3 °C Innenoberfläche → 1,1 °C Außenoberfläche → 0 °C (U = 1,43).
 - **Nur U ist eine Entwurfsentscheidung** — Dämmung ist der Hebel (A und Δθ sind gegeben).
 
 ---
@@ -189,7 +190,7 @@ Die drei Wärmeübertragungsmechanismen an derselben Gebäudewand verstehen und 
 
 ### Lernziel
 
-Vom makroskopischen Temperaturgradienten zum mikroskopischen Molekülschwingen — und zur Berechnung von R und U an mehrschichtigen Wänden.
+Vom makroskopischen Temperaturgradienten zum mikroskopischen Molekülschwingen — zur Berechnung von R und U an mehrschichtigen Wänden, zum Wärmestrom der ganzen Hülle und zu den Wärmebrücken, die die vereinfachte Flächenrechnung erzeugt.
 
 ### Kernbegriffe
 
@@ -197,20 +198,36 @@ Vom makroskopischen Temperaturgradienten zum mikroskopischen Molekülschwingen �
 |---------|------------|
 | **Temperaturgradient** | Temperaturabfall über die Schichtdicke |
 | **Mehrschichtenaufbau** | Putz · Mauerwerk · Dämmung · Außenputz — jede Schicht eigenes R |
-| **Bauteilfläche A_i** | Fläche der i-ten Hüllenfläche |
+| **U-Wert je 1 m²** | Watt durch genau 1 m² Bauteil bei 1 K — die Dicke steckt schon über R = d/λ im U-Wert |
+| **Bauteilfläche A_i** | Fläche der i-ten Hüllenfläche — vervielfacht den 1-m²-Wert |
+| **Wärmebrücke** | Ecke, Anschluss oder Durchdringung, an der die Papier-Abstraktion der Wand nicht stimmt |
+| **Ψ (Psi)** | längenbezogener Wärmedurchgangskoeffizient einer Wärmebrücke [W/(m·K)] |
+| **ΔU_WB** | pauschaler Wärmebrückenzuschlag auf die ganze Hüllfläche [W/(m²·K)] |
 
 ### Formeln
 
 | Formel | Bedeutung |
 |--------|-----------|
 | **R = d / λ** | pro Schicht |
-| **U = 1 / R_ges** | |
-| **Q̇_T = U · A · Δθ** | Transmissionswärmestrom (opake Bauteile) |
+| **U = 1 / R_ges** | Wärmestrom je 1 m² und 1 K |
+| **H = U · A** | 1-m²-Wert mal Anzahl Quadratmeter [W/K] |
+| **Φ_T = Σ (U_i · A_i · Δθ_i)** | Transmissionswärmestrom der Hülle [W] |
+| **H_T = Σ U_i·A_i + Σ Ψ_k·l_k** | mit Wärmebrücken (detailliert) |
+| **H_T = Σ U_i·A_i + ΔU_WB · A** | mit Wärmebrücken (pauschal, ΔU_WB = 0,10 bzw. 0,05 nach DIN 4108 Beiblatt 2) |
+
+### Wattvergleich (25 m² Wand, Δθ = 20 K)
+
+| Wand | U [W/(m²·K)] | Wärmestrom | Vergleich |
+|------|--------------|-----------|-----------|
+| Ungedämmte Ziegelwand 36,5 cm | ≈ 1,43 | ≈ 715 W | ≈ 0,7 Toaster |
+| + 12 cm Dämmung | ≈ 0,24 | ≈ 120 W | ≈ ein ruhender Mensch |
+| + 30 cm Dämmung | ≈ 0,11 | ≈ 55 W | ≈ zwei Teelichter |
 
 ### Merksätze
 
 - Dicker oder besser gedämmt → **R steigt**, **Q̇ sinkt**.
-- Altbau-Massivwand U ≈ 1,4 vs. saniert mit 20 cm Dämmung U ≈ 0,15 (≈ Faktor 10).
+- Altbau-Massivwand U ≈ 1,43 vs. saniert mit 20 cm Dämmung U ≈ 0,16 (≈ Faktor 9).
+- Wird mit **Außenmaßen** gerechnet, zählt die Ecke doppelt → Ψ negativ (Abschlag); mit **Innenmaßen** fehlt sie → Ψ positiv (Zuschlag).
 
 ---
 
@@ -226,10 +243,12 @@ Lüftungswärmeverluste durch Luftwechsel quantifizieren; Rolle von Volumen, Luf
 
 | Begriff | Definition |
 |---------|------------|
-| **Innenvolumen V** | Beheiztes Luftvolumen [m³] |
-| **Luftwechselrate n** | [1/h] — wie oft das Luftvolumen pro Stunde ausgetauscht wird |
-| **c_Luft** | Spezifische Wärmekapazität der Luft ≈ 0,34 Wh/(m³·K) |
+| **Bruttovolumen V_e** | Volumen aus den Außenmaßen, inklusive Wände und Decken [m³] |
+| **Nettovolumen V** | Beheiztes Luftvolumen ohne Konstruktion, pauschal ≈ 0,76 · V_e [m³] |
+| **Luftwechselrate n** | [1/h] — wie oft das Luftvolumen pro Stunde ausgetauscht wird (Lager ≈ 0 · Wohnung 0,5 · Klassenzimmer ≈ 4 · OP-Saal ≈ 20) |
+| **c_Luft** | Volumenbezogene Wärmekapazität ρ · c_p ≈ 1,2 · 1 005 J/(m³·K) ≈ 0,34 Wh/(m³·K) |
 | **η_WRG** | Wirkungsgrad der Wärmerückgewinnung |
+| **Stoß- vs. Kipplüftung** | Kurz weit öffnen tauscht die Luft in Minuten; gekippt kühlt Laibung und Heizkörper heizt nach draußen |
 
 ### Formeln
 
@@ -244,6 +263,7 @@ Lüftungswärmeverluste durch Luftwechsel quantifizieren; Rolle von Volumen, Luf
 
 - Undichte Gebäudehülle = permanenter **Wärmeverlust-Konvektionskreislauf**.
 - Mechanische Lüftung mit WRG kann den Lüftungsverlust drastisch senken.
+- Beispiel 50 m³ Raum, Δθ = 20 K: Stoßlüften ≈ 340 Wh pro Luftwechsel, Kipplüftung ≈ 780 Wh für dieselbe Frischluft.
 
 ---
 
@@ -295,7 +315,7 @@ Solare Einstrahlung durch transparente Bauteile, g-Wert, Verschattung, Speicherm
 | **A** | Fläche des Bauteils [m²] |
 | **F_f** | Rahmenanteil (nicht transparent) |
 | **g** | Gesamtenergiedurchlassgrad der Verglasung |
-| **F_sh** | Verschattungsfaktor |
+| **F_sh** | Verschattungsfaktor — besonnter Anteil der Glasfläche, 1 = frei, 0 = ganz verschattet |
 | **Speichermasse** | Schwere Innenschichten puffern Temperatur (Trägheit) |
 
 ### Formeln
@@ -308,6 +328,7 @@ Solare Einstrahlung durch transparente Bauteile, g-Wert, Verschattung, Speicherm
 
 - Niedriger **g-Wert** = weniger solare Wärme durchs Fenster (Sommer wichtig).
 - Verschattung und Speichermasse **verschieben** den Lastspitzen-Zeitpunkt.
+- Sonnenstrahlen sind **parallel** und fallen vom Fenster nach unten: im Winter liegt der Sonnenfleck auf dem Boden, die obere Raumecke gegenüber bleibt unbeschienen.
 
 ---
 
@@ -323,17 +344,20 @@ Alle Verlust- und Gewinnpfade in **einer Bilanz** zusammenführen → Jahres-Hei
 
 | Formel | Bedeutung |
 |--------|-----------|
-| **Φ_trans = U · A · ΔT** | Transmissionsverluste |
-| **Φ_vent = V · n · c_Luft · ΔT** | Lüftungsverluste |
-| **Φ_Verlust = Φ_trans + Φ_vent** | Gesamtwärmeverlustleistung |
-| **Q_h = Φ_Verlust − η_h · (Φ_solar + Φ_int)** | **Heizwärmebedarf** (DIN V 18599) |
+| **Φ_T = Σ U · A · Δθ** | Transmissionsverluste |
+| **Φ_V = V · n · c_Luft · Δθ** | Lüftungsverluste |
+| **Φ_Verlust = Φ_T + Φ_V** | Gesamtwärmeverlustleistung |
+| **Q_Verlust = (H_T + H_V) · G_t · 24 h/d** | Jahreswärmeverlust aus Gradtagzahl |
+| **Q_h = Q_Verlust − η_h · (Q_sol + Q_int)** | **Heizwärmebedarf** (DIN V 18599) |
+| **Q_E = Q_h + Q_h,ce + Q_h,d + Q_h,s + Q_h,g** | Endenergie mit Übergabe-, Verteilungs-, Speicher- und Erzeugungsverlusten (DIN V 18599-5) |
 
 ### Kernbegriffe
 
 | Begriff | Definition |
 |---------|------------|
-| **η_h** | Nutzungsgrad der internen/solaren Gewinne für Heizen |
+| **η_h** | Ausnutzungsgrad der Gewinne — Anteil der Gewinnfläche unter der Verlustkurve; schwere Bauweise speichert den Überschuss und hebt η_h |
 | **Q_h** | Heizwärmebedarf — Energie, die aktiv zugeführt werden muss |
+| **Anlagenverluste** | Rohre im unbeheizten Keller, Speicher, Heizkörper an der Außenwand und der Erzeuger verlieren Wärme auf dem Weg |
 
 ### Merksätze
 

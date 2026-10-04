@@ -20,7 +20,8 @@ from scene_3 import (  # noqa: E402
     Beat4_SpezWaermekapazitaet,
     Beat5_Lueftungsverlust,
     Beat6_Waermerueckgewinnung,
-    Beat7_Lueftungssysteme,
+    Beat7_KippOderStoss,
+    Beat8_Lueftungssysteme,
 )
 from manim_visuals import narration_text  # noqa: E402
 
@@ -31,7 +32,8 @@ BEATS = [
     Beat4_SpezWaermekapazitaet,
     Beat5_Lueftungsverlust,
     Beat6_Waermerueckgewinnung,
-    Beat7_Lueftungssysteme,
+    Beat7_KippOderStoss,
+    Beat8_Lueftungssysteme,
 ]
 
 

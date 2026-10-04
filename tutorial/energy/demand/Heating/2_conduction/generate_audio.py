@@ -1,4 +1,4 @@
-"""Generate TTS audio for Heating Module 2 (Wärmeleitung).
+"""Generate TTS audio for Heating Module 2 (Transmission).
 
 Narration text is imported from each Beat's NARRATION in scene_2.py.
 """
@@ -17,7 +17,9 @@ from scene_2 import (  # noqa: E402
     Beat1_MakroUndMikro,
     Beat2_RWert,
     Beat3_UWertUndGradient,
-    Beat4_Gebaeudehuelle,
+    Beat4_WattVergleich,
+    Beat5_Gebaeudehuelle,
+    Beat6_Waermebruecken,
 )
 from manim_visuals import narration_text  # noqa: E402
 
@@ -25,12 +27,14 @@ BEATS = [
     Beat1_MakroUndMikro,
     Beat2_RWert,
     Beat3_UWertUndGradient,
-    Beat4_Gebaeudehuelle,
+    Beat4_WattVergleich,
+    Beat5_Gebaeudehuelle,
+    Beat6_Waermebruecken,
 ]
 
 
 def main():
-    print("=== Modul 2 (Wärmeleitung) TTS Audio Generation ===\n")
+    print("=== Modul 2 (Transmission) TTS Audio Generation ===\n")
     for i, cls in enumerate(BEATS, start=1):
         text = narration_text(cls.NARRATION)
         out_path = BASE_DIR / f"beat_{i}_audio.mp3"

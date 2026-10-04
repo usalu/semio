@@ -1,0 +1,577 @@
+#region Beat7 – Thermal resistance R = d / lambda
+#region Beat7 material data
+B7_UNIT_M = 0.15
+B7_D0 = 0.24
+B7_LAM_KS = 1.0
+B7_LAM_INS = 0.035
+
+
+def _lam_digits(lam: float) -> int:
+    """🔢 Decimal places for λ — three in the insulation range, one for masonry."""
+    return 3 if lam < 0.1 else (2 if lam < 0.95 else 1)
+
+
+def _r_digits(r: float) -> int:
+    """🔢 Decimal places for a thermal resistance — two below ten, one above."""
+    return 2 if r < 9.95 else 1
+#endregion
+
+
+class Beat7_Waermedurchlasswiderstand(Scene):
+    NARRATION = [
+        ("intro",
+         "Step one: how strongly does a single layer resist the heat flow? Watch the temperature fall across it.",
+         "Schritt eins: wie stark bremst eine einzelne Schicht den Wärmestrom? Sehen wir, wie die Temperatur über sie abfällt."),
+        ("gradient",
+         "For a single layer the drop from twenty to zero is always the same distance. A poorly insulating material lets more heat through that same drop.",
+         "Bei einer einzelnen Schicht fällt die Temperatur von zwanzig auf null über dieselbe Strecke. Ein schlecht dämmendes Material lässt durch diesen Abfall mehr Wärme."),
+        ("formula",
+         "That resisting power is the thermal resistance R: the thickness d divided by the conductivity lambda.",
+         "Diese Bremswirkung ist der Wärmedurchlasswiderstand R: die Dicke d geteilt durch die Leitfähigkeit Lambda."),
+        ("d",
+         "Make the layer thicker and the same temperature drop is spread over more distance. R rises, and the heat flow falls.",
+         "Wird die Schicht dicker, verteilt sich derselbe Temperaturabfall auf mehr Strecke. R steigt, der Wärmestrom sinkt."),
+        ("lam",
+         "Lambda is the material itself. Swapping masonry for insulation cuts lambda roughly thirtyfold, so R jumps even at the same thickness.",
+         "Lambda ist das Material selbst. Mauerwerk gegen Dämmung senkt Lambda rund dreißigmal — R springt hoch, bei gleicher Dicke."),
+        ("sum",
+         "A real construction just adds the layers up: R total is the sum of every layer's own resistance.",
+         "Ein realer Aufbau addiert einfach: R-gesamt ist die Summe der Widerstände aller Schichten."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Wärmedurchlasswiderstand R", title)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        y_hi, y_lo = 1.70, 0.40
+        cy, layer_h = 1.05, 1.90
+        x0 = -2.60 - B7_D0 / B7_UNIT_M / 2
+        y_dim = cy - layer_h / 2 - 0.28
+
+        d_m, lam, ins = ValueTracker(B7_D0), ValueTracker(B7_LAM_KS), ValueTracker(0.0)
+        lam_on, d_on, r_on, g_on = (ValueTracker(0.0) for _ in range(4))
+
+        def x1():
+            return x0 + d_m.get_value() / B7_UNIT_M
+
+        def r_val():
+            return d_m.get_value() / lam.get_value()
+
+        def mat_color():
+            return interpolate_color(ManimColor(P_ORANGE), ManimColor(P_CYAN), ins.get_value())
+
+        def fit_layer(m):
+            m.stretch_to_fit_width(x1() - x0)
+            m.move_to(np.array([(x0 + x1()) / 2, cy, 0.0]))
+            m.set_stroke(mat_color())
+            m.set_fill(mat_color(), opacity=0.20)
+
+        layer = Rectangle(width=x1() - x0, height=layer_h, stroke_width=2.5)
+        fit_layer(layer)
+        layer.add_updater(fit_layer)
+
+        mat = Text("Kalksandstein", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        mat.next_to(np.array([x0, cy + layer_h / 2, 0.0]), UP, buff=0.16, aligned_edge=LEFT)
+        ins_tag = Text("Dämmung", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        ins_tag.move_to(mat, aligned_edge=LEFT + DOWN)
+        lam_live = math_readout(
+            lambda: (rf"\lambda = {de_num(lam_on.get_value() * lam.get_value(), _lam_digits(lam.get_value()))}"
+                     r"\,\mathrm{W/(m\,K)}"),
+            np.array([mat.get_right()[0] + 0.32, mat.get_bottom()[1], 0.0]),
+            size=LABEL_FONT_SIZE, color=P_ORANGE,
+        )
+
+        warm_face = Line(
+            np.array([x0 - 1.5, y_hi, 0.0]), np.array([x0, y_hi, 0.0]),
+            color=P_ORANGE, stroke_width=3,
+        )
+        cold_face = Line(np.array([x1(), y_lo, 0.0]), np.array([x1() + 1.5, y_lo, 0.0]), color=P_BLUE, stroke_width=3)
+        cold_face.add_updater(lambda m: m.put_start_and_end_on(
+            np.array([x1(), y_lo, 0.0]), np.array([x1() + 1.5, y_lo, 0.0])))
+        grad = Line(np.array([x0, y_hi, 0.0]), np.array([x1(), y_lo, 0.0]), color=P_YELLOW, stroke_width=4)
+        grad.add_updater(lambda m: m.put_start_and_end_on(
+            np.array([x0, y_hi, 0.0]), np.array([x1(), y_lo, 0.0])))
+        ti = Text("20 °C", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        ti.next_to(warm_face.get_start(), UP, buff=0.12)
+        te = Text("0 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        te.add_updater(lambda m: m.next_to(np.array([x1() + 1.5, y_lo, 0.0]), DOWN, buff=0.12))
+
+        d_brace = always_redraw(lambda: dim_arrow(
+            np.array([x0, y_dim, 0.0]), np.array([x1(), y_dim, 0.0]), color=P_CYAN,
+        ))
+        d_live = math_readout(
+            lambda: rf"d = {de_num(d_on.get_value() * d_m.get_value(), 2)}\,\mathrm{{m}}",
+            lambda: np.array([(x0 + x1()) / 2, y_dim - 0.42, 0.0]),
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="center",
+        )
+
+        r_gauge = meter("R", length=2.0, thickness=0.52, color=P_YELLOW)
+        r_gauge["group"].move_to(np.array([2.05, 1.05, 0.0]))
+        q_gauge = meter("Wärmestrom", length=2.0, thickness=0.52, color=P_RED)
+        q_gauge["group"].move_to(np.array([4.35, 1.05, 0.0]))
+        set_meter(r_gauge, 0.0)
+        set_meter(q_gauge, 0.0)
+        r_gauge["fill"].add_updater(lambda m: set_meter(r_gauge, g_on.get_value() * r_val() / (r_val() + 1.0)))
+        q_gauge["fill"].add_updater(lambda m: set_meter(q_gauge, g_on.get_value() * min(1.0, 0.9 * B7_D0 / r_val())))
+        r_live = math_readout(
+            lambda: (rf"R = \frac{{d}}{{\lambda}} = {de_num(r_on.get_value() * r_val(), _r_digits(r_val()))}"
+                     r"\,\mathrm{m^{2}K/W}"),
+            np.array([3.20, -0.62, 0.0]),
+            size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
+        )
+
+        eq, eq_box, items = math_panel([
+            ("r", "R", P_YELLOW), (None, "=", P_WHITE),
+            ("frac", r"\frac{\textcolor{#66FCF1}{d}}{\textcolor{#FFAAA5}{\lambda}}", P_WHITE),
+            (None, r"\;[\mathrm{m^{2}K/W}]", P_TEAL),
+        ], color=P_YELLOW)
+        frac = items["frac"][0]
+        parts = {"d": frac[0], "lam": frac[2]}
+
+        sum_note = math_label(
+            r"R_{\mathrm{ges}} = R_{1} + R_{2} + R_{3} + \ldots",
+            np.array([x0, -1.10, 0.0]), size=BODY_FONT_SIZE, color=P_TEAL, edge="left",
+        )
+
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+
+        self.add(lam_live)
+        self.play(Create(layer), FadeIn(mat), lam_on.animate.set_value(1.0), run_time=1.1)
+        self.play(Create(warm_face), Create(cold_face), FadeIn(ti), FadeIn(te), run_time=1.0)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gradient"))
+        self.play(Create(grad), run_time=1.0)
+        self.play(
+            *[FadeIn(g[k]) for g in (r_gauge, q_gauge) for k in ("track", "label")],
+            run_time=0.5,
+        )
+        self.add(r_gauge["fill"], q_gauge["fill"])
+        self.play(g_on.animate.set_value(1.0), run_time=0.8)
+        hold_for(self, self.NARRATION, "gradient", used=1.0 + 0.5 + 0.8 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
+        self.add(d_live)
+        self.play(Create(d_brace), d_on.animate.set_value(1.0), run_time=0.9)
+        self.play(FadeIn(eq), Create(eq_box), run_time=1.0)
+        self.add(r_live)
+        self.play(r_on.animate.set_value(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "formula", used=0.9 + 1.0 + 1.0 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "d"))
+        ring_d = highlight_param(parts, "d", color=P_CYAN)
+        self.play(Create(ring_d), run_time=0.4)
+        self.play(d_m.animate.set_value(2 * B7_D0), run_time=1.8)
+        hold_for(self, self.NARRATION, "d", used=0.4 + 1.8 + 0.35)
+        self.play(FadeOut(ring_d), run_time=0.25)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lam"))
+        ring_l = highlight_param(parts, "lam", color=P_ORANGE)
+        self.play(Create(ring_l), run_time=0.4)
+        self.play(
+            ReplacementTransform(mat, ins_tag),
+            lam.animate.set_value(B7_LAM_INS), ins.animate.set_value(1.0),
+            run_time=1.9,
+        )
+        self.play(
+            Indicate(grad, color=P_YELLOW, scale_factor=1.0),
+            Indicate(q_gauge["track"], color=P_RED, scale_factor=1.05),
+            run_time=0.7,
+        )
+        hold_for(self, self.NARRATION, "lam", used=0.4 + 1.9 + 0.7 + 0.35)
+        self.play(FadeOut(ring_l), run_time=0.25)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sum"))
+        self.play(FadeIn(sum_note, shift=UP * 0.12), run_time=1.0)
+        hold_for(self, self.NARRATION, "sum", used=1.0 + 0.35)
+
+        for mob in (layer, cold_face, grad, te, r_gauge["fill"], q_gauge["fill"]):
+            mob.clear_updaters()
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion
+
+
+#region Beat8 – U = 1 / R_ges, the number the standard actually reports
+#region Beat8 wall build-ups
+R_SI, R_SE = 0.13, 0.04
+WALL_1960 = (
+    ("Innenputz", 0.015, 0.70, P_WHITE),
+    ("Vollziegel", 0.365, 0.75, P_ORANGE),
+    ("Außenputz", 0.020, 0.87, P_WHITE),
+)
+WALL_SANIERT = WALL_1960[:2] + (("Dämmung", 0.20, 0.035, P_CYAN),) + WALL_1960[2:]
+B8_UNIT_PER_M = 3.0
+B8_MIN_W = 0.06
+B8_FILM_W = 0.05
+B8_WALL_H = 1.85
+B8_LEAK_MAX = 1.10
+
+
+def _wall_terms(layers) -> list[float]:
+    """🧮 Resistances in heat-flow order: R_si, every d/λ, R_se (DIN EN ISO 6946)."""
+    return [R_SI, *[d / lam for _n, d, lam, _c in layers], R_SE]
+
+
+def _wall_section(center, layers):
+    """🧱 Wall section drawn to scale — films, then one column per layer at its real thickness."""
+    film = lambda: Rectangle(
+        width=B8_FILM_W, height=B8_WALL_H, stroke_width=0, fill_color=P_GREEN, fill_opacity=0.55,
+    )
+    cols = [
+        Rectangle(
+            width=max(B8_MIN_W, d * B8_UNIT_PER_M), height=B8_WALL_H, color=c, stroke_width=2,
+            fill_color=c, fill_opacity=0.22,
+        )
+        for _n, d, _lam, c in layers
+    ]
+    return VGroup(film(), *cols, film()).arrange(RIGHT, buff=0.0).move_to(center)
+#endregion
+
+
+class Beat8_UWert(Scene):
+    NARRATION = [
+        ("intro",
+         "Step two. Resistance is useful, but engineers quote the opposite: how easily heat gets through.",
+         "Schritt zwei. Der Widerstand ist nützlich, aber angegeben wird das Gegenteil: wie leicht Wärme hindurchkommt."),
+        ("total",
+         "First the full resistance of the element: the two thin air films on the surfaces, plus every layer in between.",
+         "Zuerst der gesamte Widerstand des Bauteils: die beiden dünnen Luftschichten an den Oberflächen plus alle Schichten dazwischen."),
+        ("flip",
+         "Invert that total and you get the U value: the watts crossing one square metre for each kelvin of temperature difference.",
+         "Kehrt man diese Summe um, erhält man den U-Wert: die Watt, die pro Quadratmeter und pro Kelvin Unterschied hindurchgehen."),
+        ("old",
+         "An uninsulated solid wall from nineteen-sixty has a U of about one point four three. It loses a lot of heat.",
+         "Eine ungedämmte Massivwand von 1960 hat ein U von etwa 1,43 — sie verliert viel Wärme."),
+        ("new",
+         "The same wall with twenty centimetres of insulation reaches about zero point one six: roughly nine times less heat flow.",
+         "Dieselbe Wand mit zwanzig Zentimetern Dämmung erreicht etwa 0,16 — rund neunmal weniger Wärmestrom."),
+        ("meaning",
+         "Low U is the goal. Every part of the building envelope is judged by this one number.",
+         "Ein kleines U ist das Ziel. Jedes Bauteil der Gebäudehülle wird an dieser einen Zahl gemessen."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("U-Wert — wie leicht Wärme hindurchgeht", title)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        def _card(cx, layers, tag, tag_color):
+            stack = _wall_section(np.array([cx, 1.05, 0.0]), layers)
+            label = Text(tag, font_size=LABEL_FONT_SIZE, color=tag_color)
+            label.next_to(stack, UP, buff=0.18)
+            terms = _wall_terms(layers)
+            on = [ValueTracker(0.0) for _ in terms]
+            u_on = ValueTracker(0.0)
+
+            def r_now():
+                return sum(t.get_value() * r for t, r in zip(on, terms))
+
+            def u_now():
+                return u_on.get_value() / sum(terms)
+
+            r_src = lambda: (
+                r"R_{\mathrm{ges}} = "
+                + " + ".join(de_num(t.get_value() * r, 2) for t, r in zip(on, terms))
+                + rf" = {de_num(r_now(), 2)}\,\mathrm{{m^{{2}}K/W}}"
+            )
+            u_src = lambda: rf"U = \frac{{1}}{{R_{{\mathrm{{ges}}}}}} = {de_num(u_now(), 2)}\,\mathrm{{W/(m^{{2}}K)}}"
+            r_live = math_readout(r_src, np.array([cx, -0.22, 0.0]), size=LABEL_FONT_SIZE, color=P_TEAL, edge="center")
+            u_live = math_readout(u_src, np.array([cx, -0.82, 0.0]), size=BODY_FONT_SIZE, color=tag_color, edge="center")
+            right = stack.get_right()[0] + 0.06
+            leak = always_redraw(lambda: VGroup(*[
+                _flow_arrow(
+                    np.array([right, 1.05 + dy, 0.0]),
+                    np.array([right + max(0.02, B8_LEAK_MAX * u_now() / U_1960), 1.05 + dy, 0.0]),
+                    tag_color, width=3,
+                )
+                for dy in (-0.62, -0.21, 0.20, 0.61)
+            ]))
+            return {"stack": stack, "label": label, "on": on, "u_on": u_on,
+                    "r_live": r_live, "u_live": u_live, "leak": leak, "card": VGroup(stack, label)}
+
+        U_1960 = 1.0 / sum(_wall_terms(WALL_1960))
+        old = _card(-3.45, WALL_1960, "Altbau 1960 — ungedämmt", P_RED)
+        new = _card(3.45, WALL_SANIERT, "saniert — 20 cm Dämmung", P_CYAN)
+
+        films = VGroup(
+            math_label(r"R_{\mathrm{si}}", size=LABEL_FONT_SIZE, color=P_GREEN).next_to(old["stack"], LEFT, buff=0.14),
+            math_label(r"R_{\mathrm{se}}", size=LABEL_FONT_SIZE, color=P_GREEN).next_to(old["stack"], RIGHT, buff=0.14),
+        )
+
+        r_eq, r_box, r_items = math_panel([
+            ("rges", r"R_{\mathrm{ges}}", P_TEAL), (None, "=", P_WHITE),
+            ("rsi", r"R_{\mathrm{si}}", P_GREEN), (None, "+", P_WHITE),
+            (None, r"\Sigma\,\frac{d}{\lambda}", P_YELLOW), (None, "+", P_WHITE),
+            ("rse", r"R_{\mathrm{se}}", P_GREEN),
+            (None, r"\;[\mathrm{m^{2}K/W}]", P_TEAL),
+        ], color=P_TEAL)
+        u_eq, u_box, u_items = math_panel([
+            ("u", "U", P_ORANGE), (None, "=", P_WHITE),
+            (None, r"\frac{1}{R_{\mathrm{ges}}}", P_TEAL),
+            (None, r"\;[\mathrm{W/(m^{2}K)}]", P_TEAL),
+        ], color=P_ORANGE)
+
+        def count_layers(card, step):
+            for col, tracker in zip(card["stack"], card["on"]):
+                self.play(
+                    Indicate(col, color=P_YELLOW, scale_factor=1.0),
+                    tracker.animate.set_value(1.0),
+                    run_time=step,
+                )
+
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+
+        self.play(FadeIn(old["card"]), run_time=1.0)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "total"))
+        self.play(FadeIn(films), FadeIn(r_eq), Create(r_box), run_time=1.0)
+        self.add(old["r_live"])
+        count_layers(old, 0.5)
+        hold_for(self, self.NARRATION, "total", used=1.0 + 5 * 0.5 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flip"))
+        self.play(
+            ReplacementTransform(r_eq, u_eq), ReplacementTransform(r_box, u_box),
+            FadeOut(films),
+            run_time=1.3,
+        )
+        hold_for(self, self.NARRATION, "flip", used=1.3 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "old"))
+        self.add(old["u_live"], old["leak"])
+        self.play(old["u_on"].animate.set_value(1.0), run_time=1.8)
+        hold_for(self, self.NARRATION, "old", used=1.8 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "new"))
+        self.play(FadeIn(new["card"]), run_time=0.8)
+        self.add(new["r_live"])
+        count_layers(new, 0.35)
+        self.add(new["u_live"], new["leak"])
+        self.play(new["u_on"].animate.set_value(1.0), run_time=1.2)
+        hold_for(self, self.NARRATION, "new", used=0.8 + 6 * 0.35 + 1.2 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "meaning"))
+        ring = highlight_param(u_items, "u", color=P_ORANGE)
+        self.play(Create(ring), Indicate(new["u_live"], color=P_CYAN, scale_factor=1.12), run_time=1.0)
+        hold_for(self, self.NARRATION, "meaning", used=1.0 + 0.35)
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion
+
+
+#region Beat9 – Q = U · A · Δθ, and what each factor actually does
+#region Beat9 example facade
+B9_UNIT_PER_M = 0.25
+B9_W, B9_H = 12.0, 6.0
+B9_U_OLD, B9_U_NEW = 1.43, 0.16
+B9_Q_FULL = 4500.0
+#endregion
+
+
+class Beat9_WaermestromFormel(Scene):
+    NARRATION = [
+        ("intro",
+         "Now we can finally count watts. The heat flow through any building element takes three factors.",
+         "Jetzt können wir endlich Watt zählen. Der Wärmestrom durch ein Bauteil braucht drei Faktoren."),
+        ("formula",
+         "Heat flow equals the U value, times the area, times the temperature difference.",
+         "Wärmestrom gleich U-Wert mal Fläche mal Temperaturdifferenz."),
+        ("u",
+         "U is the quality of the construction — the one number we just built out of the layers.",
+         "U ist die Qualität des Aufbaus — die Zahl, die wir gerade aus den Schichten gebaut haben."),
+        ("a",
+         "A is how much of that construction there is. Double the wall area and you double the loss.",
+         "A ist, wie viel von diesem Aufbau vorhanden ist. Doppelte Wandfläche, doppelter Verlust."),
+        ("dt",
+         "Delta theta is the driver from the very first beat. Double the temperature difference and the loss doubles again.",
+         "Δθ ist der Antrieb aus dem ersten Beat. Doppelte Temperaturdifferenz, wieder doppelter Verlust."),
+        ("power",
+         "U is the main construction lever. Compactness and the indoor setpoint also matter — but insulation is the factor you choose in the wall itself.",
+         "U ist der Haupt-Hebel am Aufbau. Kompaktheit und Innentemperatur zählen auch — aber Dämmung ist der Faktor, den man in der Wand selbst wählt."),
+        ("outro",
+         "For this wall the answer is about two thousand watts, the same as a full-power electric heater running non-stop.",
+         "Für diese Wand sind das rund zweitausend Watt — so viel wie ein Heizlüfter auf voller Stufe im Dauerbetrieb."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Wärmestrom durch ein Bauteil", title)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        fl, fcy = -5.80, 1.00
+        fh = B9_H * B9_UNIT_PER_M
+        w_geo, w_on, h_on = ValueTracker(B9_W), ValueTracker(0.0), ValueTracker(0.0)
+        u_t, dt_t = ValueTracker(0.0), ValueTracker(0.0)
+
+        def fr():
+            return fl + w_geo.get_value() * B9_UNIT_PER_M
+
+        def area():
+            return w_on.get_value() * w_geo.get_value() * h_on.get_value() * B9_H
+
+        def q_now():
+            return u_t.get_value() * area() * dt_t.get_value()
+
+        def fit_facade(m):
+            m.stretch_to_fit_width(fr() - fl)
+            m.move_to(np.array([(fl + fr()) / 2, fcy, 0.0]))
+
+        facade = Rectangle(
+            width=fr() - fl, height=fh, color=P_WHITE, stroke_width=2.5,
+            fill_color=P_TEAL, fill_opacity=0.12,
+        )
+        fit_facade(facade)
+        facade.add_updater(fit_facade)
+
+        w_dim = always_redraw(lambda: dim_arrow(
+            np.array([fl, fcy - fh / 2 - 0.25, 0.0]), np.array([fr(), fcy - fh / 2 - 0.25, 0.0]), color=P_CYAN,
+        ))
+        h_dim = dim_arrow(
+            np.array([fl - 0.25, fcy - fh / 2, 0.0]), np.array([fl - 0.25, fcy + fh / 2, 0.0]), color=P_CYAN,
+        )
+        w_live = math_readout(
+            lambda: rf"{de_num(w_on.get_value() * w_geo.get_value())}\,\mathrm{{m}}",
+            lambda: np.array([(fl + fr()) / 2, fcy - fh / 2 - 0.62, 0.0]),
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="center",
+        )
+        h_live = math_readout(
+            lambda: rf"{de_num(h_on.get_value() * B9_H)}\,\mathrm{{m}}",
+            np.array([fl - 0.42, fcy - 0.08, 0.0]),
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="right",
+        )
+        a_live = math_readout(
+            lambda: rf"A = {de_num(area())}\,\mathrm{{m^{{2}}}}",
+            lambda: np.array([(fl + fr()) / 2, fcy + 0.22, 0.0]),
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="center",
+        )
+        u_live = math_readout(
+            lambda: rf"U = {de_num(u_t.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}",
+            lambda: np.array([(fl + fr()) / 2, fcy - 0.40, 0.0]),
+            size=LABEL_FONT_SIZE, color=P_ORANGE, edge="center",
+        )
+
+        ti = Text("innen 20 °C", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        ti.next_to(np.array([fl, fcy + fh / 2, 0.0]), UP, buff=0.16, aligned_edge=LEFT)
+        te = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        te.move_to(np.array([fl, fcy - fh / 2 - 1.10, 0.0]), aligned_edge=LEFT)
+        te_cold = Text("außen −20 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(te, aligned_edge=LEFT)
+        te_back = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(te, aligned_edge=LEFT)
+        dt_live = math_readout(
+            lambda: _dtheta_src(dt_t.get_value()),
+            np.array([te_cold.get_right()[0] + 0.40, te.get_bottom()[1], 0.0]),
+            size=LABEL_FONT_SIZE, color=P_BLUE,
+        )
+
+        q_gauge = meter("Wärmestrom", length=2.2, thickness=0.55, color=P_RED)
+        q_gauge["group"].move_to(np.array([1.60, 0.95, 0.0]))
+        set_meter(q_gauge, 0.0)
+        q_gauge["fill"].add_updater(lambda m: set_meter(q_gauge, min(1.0, q_now() / B9_Q_FULL)))
+        q_live = math_readout(
+            lambda: rf"\dot{{Q}} = U \cdot A \cdot \Delta\theta = {de_num(q_now())}\,\mathrm{{W}}",
+            np.array([1.60, -0.62, 0.0]),
+            size=BODY_FONT_SIZE, color=P_RED, edge="center",
+        )
+
+        eq, eq_box, items = math_panel([
+            ("q", r"\dot{Q}", P_WHITE), (None, "=", P_WHITE),
+            ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
+            ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("dt", r"\Delta\theta", P_BLUE),
+            (None, r"\;[\mathrm{W}]", P_TEAL),
+        ])
+
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+
+        self.play(Create(facade), FadeIn(ti), FadeIn(te), run_time=1.0)
+        self.add(w_live, h_live, a_live)
+        self.play(
+            Create(w_dim), Create(h_dim),
+            w_on.animate.set_value(1.0), h_on.animate.set_value(1.0),
+            run_time=1.4,
+        )
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
+        self.play(FadeIn(eq), Create(eq_box), FadeIn(q_gauge["track"]), FadeIn(q_gauge["label"]), run_time=1.0)
+        self.add(q_gauge["fill"], u_live, dt_live, q_live)
+        self.play(u_t.animate.set_value(B9_U_OLD), run_time=0.9)
+        self.play(dt_t.animate.set_value(THETA_I - THETA_E), run_time=0.9)
+        hold_for(self, self.NARRATION, "formula", used=1.0 + 0.9 + 0.9 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "u"))
+        ring_u = highlight_param(items, "u", color=P_ORANGE)
+        self.play(Create(ring_u), Indicate(facade, color=P_ORANGE), run_time=0.9)
+        hold_for(self, self.NARRATION, "u", used=0.9 + 0.35)
+        self.play(FadeOut(ring_u), run_time=0.25)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "a"))
+        ring_a = highlight_param(items, "a", color=P_CYAN)
+        self.play(Create(ring_a), run_time=0.4)
+        self.play(w_geo.animate.set_value(2 * B9_W), run_time=1.5)
+        hold_for(self, self.NARRATION, "a", used=0.4 + 1.5 + 0.35)
+        self.play(w_geo.animate.set_value(B9_W), FadeOut(ring_a), run_time=1.0)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "dt"))
+        ring_dt = highlight_param(items, "dt", color=P_BLUE)
+        self.play(Create(ring_dt), run_time=0.4)
+        self.play(
+            ReplacementTransform(te, te_cold),
+            dt_t.animate.set_value(2 * (THETA_I - THETA_E)),
+            run_time=1.4,
+        )
+        hold_for(self, self.NARRATION, "dt", used=0.4 + 1.4 + 0.35)
+        self.play(
+            ReplacementTransform(te_cold, te_back),
+            dt_t.animate.set_value(THETA_I - THETA_E),
+            FadeOut(ring_dt),
+            run_time=1.0,
+        )
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "power"))
+        lever = chip("Hebel in der Wand: U dämmen", P_GREEN, font_size=LABEL_FONT_SIZE)
+        lever.move_to(np.array([fl + B9_W * B9_UNIT_PER_M / 2, -1.12, 0.0]))
+        self.play(
+            Indicate(items["u"], color=P_GREEN, scale_factor=1.25),
+            FadeIn(lever, shift=UP * 0.12),
+            run_time=1.1,
+        )
+        self.play(
+            facade.animate.set_fill(P_CYAN, opacity=0.22),
+            u_t.animate.set_value(B9_U_NEW),
+            run_time=1.5,
+        )
+        hold_for(self, self.NARRATION, "power", used=1.1 + 1.5 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
+        anchor = watt_anchor(2000, compare="heater", title="ungedämmt")
+        anchor.scale(0.68).move_to(np.array([5.20, 0.60, 0.0]))
+        self.play(FadeIn(anchor, shift=LEFT * 0.15), run_time=1.1)
+        hold_for(self, self.NARRATION, "outro", used=1.1 + 0.35)
+
+        for mob in (facade, q_gauge["fill"]):
+            mob.clear_updaters()
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion

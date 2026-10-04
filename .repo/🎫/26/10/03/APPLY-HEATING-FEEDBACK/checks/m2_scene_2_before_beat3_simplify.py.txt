@@ -534,20 +534,20 @@ class Beat3_UWertUndGradient(Scene):
          "U equals one over R, in watts per square meter and kelvin.",
          "U ist eins durch R, in Watt pro Quadratmeter und Kelvin."),
         ("tile",
-         "U is the heat flow through exactly one square meter of wall for one kelvin of difference.",
-         "U ist der Wärmestrom durch genau einen Quadratmeter Wand bei einem Kelvin Unterschied."),
+         "U is the heat flow through exactly one square meter of wall for one kelvin of difference: 0.24 watts here.",
+         "U ist der Wärmestrom durch genau 1 m² Wand bei 1 K Unterschied, hier 0,24 Watt."),
         ("thick",
          "The thickness is already inside U through R equals d over lambda — so U is normalised to one square meter.",
          "Die Dicke steckt schon in U, über R gleich d durch Lambda — deshalb ist U auf 1 m² normiert."),
         ("area",
-         "A real wall is many such square meters. Each one carries U — together that is U times A.",
-         "Eine echte Wand besteht aus vielen solchen Quadratmetern. Jeder trägt U — zusammen ergibt das U mal A."),
+         "A five by five meter wall is 25 such tiles. Each carries 0.24 watts per kelvin — together U times A is 6 watts per kelvin.",
+         "Eine Wand von 5 m mal 5 m besteht aus 25 solchen Kacheln. Jede trägt 0,24 W/K — zusammen U mal A gleich 6 W/K."),
         ("profile",
-         "Through the wall, temperature drops from indoors to outdoors — that gap is delta theta.",
-         "Durch die Wand fällt die Temperatur von innen nach außen — diese Lücke ist Delta-Theta."),
+         "Through the wall, temperature drops from indoors to outdoors — that gap is delta theta. At 25 kelvin, 150 watts flow.",
+         "Durch die Wand fällt die Temperatur von innen nach außen — diese Lücke ist Delta-Theta. Bei 25 K fließen 150 W."),
         ("steeper",
-         "A steeper gradient means a larger driving force and a higher heat flow.",
-         "Ein steilerer Gradient heißt größere Triebkraft und höherer Wärmestrom."),
+         "A steeper gradient means a larger driving force: at 35 kelvin it is 210 watts.",
+         "Ein steilerer Gradient heißt größere Triebkraft: bei 35 K sind es 210 W."),
     ]
 
     def construct(self):
@@ -564,7 +564,8 @@ class Beat3_UWertUndGradient(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         #region U = 1/R
-        r_lbl = math_label(r"R", np.array([0.0, 0.7, 0.0]), size=FORMULA_FONT_SIZE, color=P_TEAL)
+        r_lbl = math_label(rf"R_{{\mathrm{{ges}}}} = {de_num(R_INSULATED, 2)}\,\mathrm{{m^{{2}}K/W}}",
+                           np.array([0.0, 0.7, 0.0]), size=FORMULA_FONT_SIZE, color=P_YELLOW)
         self.play(FadeIn(r_lbl), run_time=0.7)
         hold_for(self, N, "u_intro", used=0.7 + 0.3)
 
@@ -574,17 +575,20 @@ class Beat3_UWertUndGradient(Scene):
             (None, r"\;[\mathrm{W/(m^{2}\,K)}]", P_WHITE),
         ])
         _fly_into(self, p_u, {"frac": r_lbl}, run_time=1.0)
+        u_lbl = math_label(rf"U = \frac{{1}}{{{de_num(R_INSULATED, 2)}}} = {de_num(U_INSULATED, 2)}\,\mathrm{{W/(m^{{2}}K)}}",
+                           np.array([0.0, -0.2, 0.0]), color=P_ORANGE)
         ring = highlight_param(p_u[2], "u", color=P_ORANGE)
-        self.play(FadeOut(r_lbl), Create(ring), run_time=0.6)
+        self.play(FadeIn(u_lbl), Create(ring), run_time=0.6)
         caption = swap_caption(self, caption, subtitle_text(N, "u_formula"))
         hold_for(self, N, "u_formula", used=1.6 + 0.35)
         self.play(FadeOut(ring), run_time=0.2)
         #endregion
 
-        #region One square metre tile carries U
+        #region One square metre tile
+        col_x = 0.6
         side = 1.8
         depth = np.array([0.95, 0.55, 0.0]) * (D_INSULATED / 0.52)
-        o = np.array([-1.3, -0.85, 0.0])
+        o = np.array([-4.6, -0.85, 0.0])
         tile = _slab(o, side, depth)
         w_dim = dim_arrow(o + DOWN * 0.25, o + RIGHT * side + DOWN * 0.25, color=P_WHITE)
         w_lbl = math_label(r"1\,\mathrm{m}", o + RIGHT * side / 2 + DOWN * 0.62, size=LABEL_FONT_SIZE)
@@ -592,71 +596,96 @@ class Beat3_UWertUndGradient(Scene):
         h_lbl = math_label(r"1\,\mathrm{m}", o + LEFT * 0.38 + UP * (side / 2 - 0.07), size=LABEL_FONT_SIZE, edge="right")
         top_right = o + RIGHT * side + UP * side
         d_dim = dim_arrow(top_right + UP * 0.12 + LEFT * 0.12, top_right + depth + UP * 0.12 + LEFT * 0.12, color=P_ORANGE)
-        d_lbl = math_label("d", top_right + depth + RIGHT * 0.15 + DOWN * 0.05, size=BODY_FONT_SIZE,
-                           color=P_ORANGE, edge="left")
+        d_lbl = math_label(rf"d = {de_num(D_INSULATED, 2)}\,\mathrm{{m}}", top_right + depth + RIGHT * 0.12 + DOWN * 0.05,
+                           size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
         dims = VGroup(w_dim, w_lbl, h_dim, h_lbl, d_dim, d_lbl)
-        u_tile = math_label("U", size=FORMULA_FONT_SIZE, color=P_ORANGE).move_to(o + (RIGHT + UP) * side / 2)
 
-        self.play(Create(tile), run_time=0.9)
-        self.play(LaggedStart(*[GrowFromCenter(m) for m in dims], lag_ratio=0.12), run_time=0.9)
-        self.play(TransformFromCopy(p_u[2]["u"], u_tile), run_time=0.9)
-        starts = [o + RIGHT * side * fx + UP * side * fy for fx in (0.25, 0.75) for fy in (0.3, 0.7)]
+        dt_one = ValueTracker(0.0)
+        dt_read = math_readout(lambda: rf"\Delta\theta = {de_num(dt_one.get_value(), 1)}\,\mathrm{{K}}",
+                               np.array([col_x, 0.75, 0.0]), color=P_BLUE)
+        q_one = math_readout(
+            lambda: (rf"\dot{{Q}} = {de_num(U_INSULATED, 2)} \cdot 1\,\mathrm{{m^{{2}}}} \cdot {de_num(dt_one.get_value(), 1)}"
+                     rf"\,\mathrm{{K}} = {de_num(U_INSULATED * dt_one.get_value(), 2)}\,\mathrm{{W}}"),
+            np.array([col_x, 0.05, 0.0]), color=P_RED)
+        self.play(FadeOut(r_lbl), u_lbl.animate.move_to(np.array([col_x, 1.55, 0.0]), aligned_edge=LEFT),
+                  Create(tile), run_time=1.0)
+        self.play(LaggedStart(*[GrowFromCenter(m) for m in dims], lag_ratio=0.12), run_time=1.0)
+        self.add(dt_read, q_one)
+        starts = [o + RIGHT * side * fx + UP * side * fy for fx in (0.25, 0.5, 0.75) for fy in (0.3, 0.7)]
         tile_paths = _flow_lines([(p - depth * 0.7, p + depth * 1.7) for p in starts])
         caption = swap_caption(self, caption, subtitle_text(N, "tile"))
-        animate_flows(self, [(tile_paths, P_RED, P_BLUE)], run_time=3.0, waves=3, cycles=1.5, radius=0.09)
+        animate_flows(self, [(tile_paths, P_RED, P_BLUE)], run_time=3.0, waves=3, cycles=1.5, radius=0.09,
+                      extra=[dt_one.animate.set_value(1.0)])
         hold_for(self, N, "tile")
 
+        chain = math_label(r"d \;\to\; R = \frac{d}{\lambda} \;\to\; U = \frac{1}{R}", np.array([col_x, -0.5, 0.0]),
+                           color=P_YELLOW, edge="left")
+        norm = math_label(r"\Rightarrow\; U\;\text{gilt pro}\;1\,\mathrm{m^{2}}\;\text{und}\;1\,\mathrm{K}",
+                          np.array([col_x, -1.1, 0.0]), color=P_ORANGE, edge="left")
         caption = swap_caption(self, caption, subtitle_text(N, "thick"))
-        d_copy = d_lbl.copy()
-        self.play(Indicate(d_dim, color=P_ORANGE), d_copy.animate.move_to(u_tile).scale(0.6), run_time=1.2)
-        self.play(FadeOut(d_copy), Indicate(u_tile, color=P_ORANGE, scale_factor=1.3), run_time=0.6)
+        self.play(Indicate(d_dim, color=P_ORANGE), TransformFromCopy(d_lbl, chain), run_time=1.2)
+        self.play(FadeIn(norm, shift=RIGHT * 0.1), run_time=0.6)
         hold_for(self, N, "thick")
         #endregion
 
-        #region Many square metres make the area A
+        #region 25 tiles make the wall
+        dt_read.clear_updaters()
+        q_one.clear_updaters()
         cols = 5
         cell = 0.6
-        g_center = np.array([-0.4, 0.42, 0.0])
+        g_center = np.array([-3.0, 0.42, 0.0])
         g_origin = g_center + LEFT * cell * cols / 2 + DOWN * cell * cols / 2
         tiles = VGroup()
         for r in range(cols):
             for c in range(cols):
                 sq = Square(side_length=cell * 0.94, color=P_WHITE, stroke_width=1.5, fill_color=INSULATION, fill_opacity=0.45)
                 sq.move_to(g_origin + RIGHT * cell * (c + 0.5) + UP * cell * (cols - r - 0.5))
-                tag = math_label("U", size=16, color=P_ORANGE).move_to(sq.get_center())
+                tag = math_label(de_num(U_INSULATED, 2), size=12, color=P_WHITE).move_to(sq.get_center())
                 tiles.add(VGroup(sq, tag))
+        n_tiles = ValueTracker(0.0)
         gx0, gx1 = g_origin[0], g_origin[0] + cell * cols
         gy0, gy1 = g_origin[1], g_origin[1] + cell * cols
         gw_dim = dim_arrow((gx0, gy0 - 0.22, 0.0), (gx1, gy0 - 0.22, 0.0), color=P_WHITE)
-        gw_lbl = math_label(rf"{cols}\,\mathrm{{m}}", np.array([(gx0 + gx1) / 2, gy0 - 0.6, 0.0]), size=LABEL_FONT_SIZE)
+        gw_lbl = math_label(rf"{cols} \cdot 1\,\mathrm{{m}} = {cols}\,\mathrm{{m}}", np.array([(gx0 + gx1) / 2, gy0 - 0.6, 0.0]),
+                            size=LABEL_FONT_SIZE)
         gh_dim = dim_arrow((gx0 - 0.22, gy0, 0.0), (gx0 - 0.22, gy1, 0.0), color=P_WHITE)
         gh_lbl = math_label(rf"{cols}\,\mathrm{{m}}", np.array([gx0 - 0.38, (gy0 + gy1) / 2 - 0.07, 0.0]),
                             size=LABEL_FONT_SIZE, edge="right")
-        a_frame = SurroundingRectangle(VGroup(*[t[0] for t in tiles]), color=P_CYAN, buff=0.06, stroke_width=3)
-        a_lbl = math_label("A", size=FORMULA_FONT_SIZE, color=P_CYAN).next_to(a_frame, RIGHT, buff=0.35)
-
+        a_read = math_readout(lambda: rf"A = {de_num(n_tiles.get_value())} \cdot 1\,\mathrm{{m^{{2}}}} = "
+                                      rf"{de_num(n_tiles.get_value())}\,\mathrm{{m^{{2}}}}",
+                              np.array([col_x, 0.75, 0.0]), color=P_CYAN)
+        h_read = math_readout(lambda: rf"H = U \cdot A = {de_num(U_INSULATED, 2)} \cdot {de_num(n_tiles.get_value())}"
+                                      rf" = {de_num(U_INSULATED * n_tiles.get_value(), 1)}\,\mathrm{{W/K}}",
+                              np.array([col_x, 0.05, 0.0]), color=P_YELLOW)
         caption = swap_caption(self, caption, subtitle_text(N, "area"))
-        self.play(FadeOut(dims), FadeOut(u_tile), ReplacementTransform(tile, tiles[0]), run_time=1.0)
+        self.play(FadeOut(VGroup(dims, chain, norm, dt_read, q_one)), run_time=0.5)
+        self.add(a_read, h_read)
+        self.play(ReplacementTransform(tile, tiles[0]), n_tiles.animate.set_value(1), run_time=1.0)
         self.play(LaggedStart(*[TransformFromCopy(tiles[0], t) for t in tiles[1:]], lag_ratio=0.08),
-                  run_time=2.4, rate_func=linear)
+                  n_tiles.animate.set_value(cols * cols), run_time=2.6, rate_func=linear)
         self.play(GrowFromCenter(gw_dim), FadeIn(gw_lbl), GrowFromCenter(gh_dim), FadeIn(gh_lbl), run_time=0.7)
-        self.play(Create(a_frame), FadeIn(a_lbl, shift=LEFT * 0.1), run_time=0.8)
+        a_read.clear_updaters()
+        h_read.clear_updaters()
         _drop_panel(self, p_u)
         p_h = math_panel([
             ("h", "H", P_YELLOW), (None, "=", P_WHITE), ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("a", "A", P_CYAN), (None, r"\;[\mathrm{W/K}]", P_WHITE),
         ])
-        _fly_into(self, p_h, {"u": tiles[12][1], "a": a_lbl}, run_time=1.2)
+        _fly_into(self, p_h, {"u": u_lbl, "a": a_read}, run_time=1.2)
         hold_for(self, N, "area")
         #endregion
 
-        #region Temperature profile adds delta theta
-        self.play(FadeOut(VGroup(tiles, gw_dim, gw_lbl, gh_dim, gh_lbl, a_frame, a_lbl)), run_time=0.6)
+        #region Temperature profile multiplies by delta theta
+        h_value = U_INSULATED * cols * cols
+        h_short = math_label(rf"H = {de_num(U_INSULATED, 2)} \cdot {de_num(cols * cols)} = {de_num(h_value, 1)}\,\mathrm{{W/K}}",
+                             np.array([2.4, -0.55, 0.0]), color=P_YELLOW, edge="left")
+        self.play(FadeOut(VGroup(tiles, gw_dim, gw_lbl, gh_dim, gh_lbl, a_read, u_lbl)),
+                  ReplacementTransform(h_read, h_short), run_time=0.6)
         axes = Axes(
             x_range=[0, 3, 1], y_range=[-25, 30, 10],
             x_length=5.2, y_length=3.0,
             axis_config={"include_numbers": False, "color": GREY},
-        ).move_to(np.array([-0.6, 0.45, 0.0]))
+        ).move_to(np.array([-1.7, 0.45, 0.0]))
         x_labels = VGroup(*[
             body_text(text, font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to(axes.c2p(x, -25) + DOWN * 0.25)
             for x, text in ((0.5, "Innen"), (1.5, "Wand"), (2.5, "Außen"))
@@ -684,19 +713,24 @@ class Beat3_UWertUndGradient(Scene):
         t_out_lbl = math_readout(lambda: rf"{de_num(t_out.get_value())}\,\mathrm{{°C}}",
                                  lambda: axes.c2p(2.5, t_out.get_value()) + DOWN * 0.38, size=LABEL_FONT_SIZE,
                                  color=P_BLUE, edge="center")
-        dt_lbl = always_redraw(lambda: math_label(r"\Delta\theta", size=FORMULA_FONT_SIZE, color=P_YELLOW).move_to(
-            np.array([span_x + 0.45, (axes.c2p(0, 20)[1] + axes.c2p(0, t_out.get_value())[1]) / 2, 0.0])))
+        dt_lbl = math_readout(lambda: rf"\Delta\theta = {de_num(20 - t_out.get_value())}\,\mathrm{{K}}",
+                              lambda: np.array([span_x + 0.22, (axes.c2p(0, 20)[1] + axes.c2p(0, t_out.get_value())[1]) / 2 - 0.08, 0.0]),
+                              color=P_YELLOW)
+        q_read = math_readout(lambda: rf"\dot{{Q}} = {de_num(h_value, 1)} \cdot {de_num(20 - t_out.get_value())}"
+                                      rf" = {de_num(h_value * (20 - t_out.get_value()))}\,\mathrm{{W}}",
+                              np.array([2.4, -1.2, 0.0]), color=P_RED)
         self.play(Create(axes), FadeIn(wall_band), FadeIn(x_labels), FadeIn(t_in_lbl), run_time=1.0)
-        self.add(prof, t_out_lbl, dt_span, dt_lbl)
+        self.add(prof, t_out_lbl, dt_span, dt_lbl, q_read)
         caption = swap_caption(self, caption, subtitle_text(N, "profile"))
         self.play(t_out.animate.set_value(-5.0), run_time=2.0)
+        dt_lbl_static = dt_lbl.copy().clear_updaters()
         _drop_panel(self, p_h)
         p_q = math_panel([
             ("q", r"\dot{Q}", P_RED), (None, "=", P_WHITE), ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE), ("dt", r"\Delta\theta", P_YELLOW),
             (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
-        _fly_into(self, p_q, {"dt": dt_lbl.copy().clear_updaters()}, run_time=1.0)
+        _fly_into(self, p_q, {"dt": dt_lbl_static}, run_time=1.0)
         hold_for(self, N, "profile")
 
         caption = swap_caption(self, caption, subtitle_text(N, "steeper"))
@@ -923,33 +957,50 @@ class Beat5_Gebaeudehuelle(Scene):
                             stroke_width=1.5, stroke_opacity=0.5)
         house = {"Dach": roof, "Außenwand": walls, "Fenster": windows, "Haustür": door, "Boden": floor_line}
 
-        phi_max = max(a * u * dt for _n, a, u, dt, _c in ENVELOPE)
+        def roof_paths(n: int):
+            segs = []
+            for a, b in ((tl, roof_peak), (roof_peak, tr)):
+                u = (b - a) / np.linalg.norm(b - a)
+                nrm = np.array([-u[1], u[0], 0.0])
+                if nrm[1] < 0:
+                    nrm = -nrm
+                for f in np.linspace(0.25, 0.75, max(1, n // 2)):
+                    p = a + (b - a) * f
+                    segs.append((p - nrm * 0.35, p + nrm * 0.6))
+            return segs
 
-        def loss_arrow(start, direction, phi: float, color):
-            width = 2.5 + 9.0 * phi / phi_max
-            start = np.array(start, dtype=float)
-            return Arrow(start, start + np.array(direction, dtype=float) * 0.6, buff=0, color=color, stroke_width=width,
-                         max_stroke_width_to_length_ratio=40, max_tip_length_to_length_ratio=0.45,
-                         tip_length=0.12 + 0.012 * width)
+        def pick_points(points, n: int):
+            idx = np.linspace(0, len(points) - 1, n).round().astype(int) if n > 1 else [len(points) // 2]
+            segs = []
+            for i in idx:
+                x_wall, y = points[i]
+                outward = -1.0 if x_wall < hc[0] else 1.0
+                segs.append(((x_wall - outward * 0.35, y, 0.0), (x_wall + outward * 0.65, y, 0.0)))
+            return segs
 
-        def roof_normal(a, b):
-            u = (b - a) / np.linalg.norm(b - a)
-            nrm = np.array([-u[1], u[0], 0.0])
-            return nrm if nrm[1] > 0 else -nrm
+        def n_of(phi: float) -> int:
+            return max(1, int(round(phi / 90.0)))
 
-        y_wall_lo, y_wall_hi = (bl[1] + win_lo) / 2, (win_hi + tl[1]) / 2
-        y_win = (win_lo + win_hi) / 2
-        anchors = {
-            "Dach": [((tl + roof_peak) / 2, roof_normal(tl, roof_peak)), ((roof_peak + tr) / 2, roof_normal(roof_peak, tr))],
-            "Außenwand": [((bl[0], y_wall_hi, 0.0), LEFT), ((br[0], y_wall_hi, 0.0), RIGHT), ((bl[0], y_wall_lo, 0.0), LEFT)],
-            "Fenster": [((bl[0] - 0.07, y_win, 0.0), LEFT), ((br[0] + 0.07, y_win, 0.0), RIGHT)],
-            "Haustür": [((br[0] + 0.07, (bl[1] + door_hi) / 2, 0.0), RIGHT)],
-            "Boden": [((hc[0], bl[1], 0.0), DOWN)],
-        }
-        loss_arrows = {
-            name: VGroup(*[loss_arrow(p, d, a * u * dt / len(anchors[name]), color) for p, d in anchors[name]])
-            for name, a, u, dt, color in ENVELOPE
-        }
+        wall_points = [(bl[0], y) for y in np.linspace(bl[1] + 0.1, win_lo - 0.06, 6)] + \
+                      [(bl[0], y) for y in np.linspace(win_hi + 0.06, tl[1] - 0.1, 5)] + \
+                      [(br[0], y) for y in np.linspace(door_hi + 0.06, win_lo - 0.06, 3)] + \
+                      [(br[0], y) for y in np.linspace(win_hi + 0.06, tr[1] - 0.1, 5)]
+        window_points = [(x, y) for x in (bl[0], br[0]) for y in np.linspace(win_lo + 0.06, win_hi - 0.06, 4)]
+        door_points = [(br[0], y) for y in np.linspace(bl[1] + 0.12, door_hi - 0.12, 3)]
+        flow_tracks = {}
+        for name, a, u, dt, _c in ENVELOPE:
+            n = n_of(a * u * dt)
+            if name == "Dach":
+                segs = roof_paths(n)
+            elif name == "Außenwand":
+                segs = pick_points(wall_points, n)
+            elif name == "Fenster":
+                segs = pick_points(window_points, n)
+            elif name == "Haustür":
+                segs = pick_points(door_points, n)
+            else:
+                segs = [((x, bl[1] + 0.35, 0.0), (x, bl[1] - 0.6, 0.0)) for x in np.linspace(bl[0] + 0.5, br[0] - 0.5, n)]
+            flow_tracks[name] = _flow_lines(segs)
 
         self.play(Create(floor_line), Create(walls), Create(roof), FadeIn(storey), run_time=1.4)
         self.play(Create(windows), Create(door), run_time=0.8)
@@ -965,6 +1016,8 @@ class Beat5_Gebaeudehuelle(Scene):
         row, box, items = panel
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
         self.play(FadeIn(row), Create(box), run_time=1.0)
+        animate_flows(self, [(flow_tracks[name], color, P_BLUE) for name, _a, _u, _t, color in ENVELOPE],
+                      run_time=2.6, waves=3, cycles=1.4)
         hold_for(self, N, "formula")
         #endregion
 
@@ -1011,8 +1064,8 @@ class Beat5_Gebaeudehuelle(Scene):
             label, reads = rows[i]
             self.play(FadeIn(label), house[name].animate.set_stroke(width=6.5), run_time=0.3)
             self.add(reads, bars[i])
-            self.play(LaggedStart(*[GrowArrow(arr) for arr in loss_arrows[name]], lag_ratio=0.15),
-                      fracs[i].animate.set_value(1.0), run_time=run_time)
+            animate_flows(self, [(flow_tracks[name], color, P_BLUE)], run_time=run_time, waves=3, cycles=1.2,
+                          extra=[fracs[i].animate.set_value(1.0)])
             self.play(house[name].animate.set_stroke(width=3.5 if name in ("Dach", "Außenwand", "Boden") else 2.5), run_time=0.2)
 
         caption = swap_caption(self, caption, subtitle_text(N, "paths"))
@@ -1052,10 +1105,10 @@ class Beat5_Gebaeudehuelle(Scene):
         stack_lbl = math_label(r"\Phi_{\mathrm{T}}", np.array([stack_x, cursor + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW)
         self.play(Create(sum_rule), FadeIn(sum_label), FadeIn(sum_a), run_time=0.5)
         self.add(sum_phi)
-        self.play(*[ShowPassingFlash(arr.copy().set_color(P_WHITE), time_width=0.5)
-                    for group in loss_arrows.values() for arr in group],
-                  LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
-                  total.animate.set_value(PHI_T), run_time=2.6)
+        animate_flows(self, [(flow_tracks[name], color, P_BLUE) for name, _a, _u, _t, color in ENVELOPE],
+                      run_time=2.6, waves=3, cycles=1.4,
+                      extra=[LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
+                             total.animate.set_value(PHI_T)])
         sum_phi.clear_updaters()
         self.play(FadeIn(stack_lbl), Indicate(sum_phi, color=P_YELLOW), run_time=0.6)
         hold_for(self, N, "outro")

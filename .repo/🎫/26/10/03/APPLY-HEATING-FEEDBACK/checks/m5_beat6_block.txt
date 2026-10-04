@@ -1,0 +1,160 @@
+#region Beat6 — Wärmespeicherung
+class Beat6_Waermespeicherung(Scene):
+    """🧱 Floor slab stores winter sun by day and radiates at night."""
+
+    NARRATION = [
+        ("day",
+         "Dense floor slab absorbs winter sun through the window.",
+         "Die dichte Bodenplatte absorbiert Wintersonne durchs Fenster."),
+        ("night",
+         "At night the stored heat radiates back into the room.",
+         "Nachts strahlt die gespeicherte Wärme zurück in den Raum."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Wärmespeicherung und Strahlung", title)
+        din = _din_ref("DIN EN ISO 13786")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "day"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        phase_1 = Text("Tag: Absorption", font_size=BODY_FONT_SIZE, color=COLOR_G)
+        phase_2 = Text("Nacht: Abstrahlung", font_size=BODY_FONT_SIZE, color=COLOR_HEAT)
+        # Type-scale phase titles under the subtitle — not scaled with the room.
+        phase_1.next_to(subtitle, DOWN, buff=0.4)
+        phase_2.move_to(phase_1.get_center())
+
+        floor_slab = Rectangle(
+            width=5.8, height=0.55, color=COLOR_SLAB,
+            fill_color=COLOR_SLAB, fill_opacity=0.85, stroke_width=2,
+        ).move_to([0, -1.2, 0])
+        floor_label = Text("Betonbodenplatte", font_size=BODY_FONT_SIZE, color=P_WHITE)
+
+        left_wall = Line([-2.9, 0.85, 0], [-2.9, -0.95, 0], color="#E2E8F0", stroke_width=3)
+        ceiling = Line([-2.9, 0.85, 0], [2.9, 0.85, 0], color="#E2E8F0", stroke_width=3)
+        right_wall_top = Line([2.9, 0.85, 0], [2.9, 0.35, 0], color="#E2E8F0", stroke_width=3)
+        right_wall_bot = Line([2.9, -0.35, 0], [2.9, -0.95, 0], color="#E2E8F0", stroke_width=3)
+        window = Rectangle(
+            width=0.1, height=0.7, color=COLOR_A,
+            fill_color=COLOR_A, fill_opacity=0.5, stroke_width=1.5,
+        ).move_to([2.9, 0.0, 0])
+        room_group = VGroup(left_wall, ceiling, right_wall_top, right_wall_bot, window)
+
+        sun_center = np.array([4.1, 0.15, 0])
+        sun = Dot(point=sun_center, radius=0.3, color=COLOR_G)
+        sun_glow = Circle(radius=0.42, color=COLOR_G, stroke_width=1, stroke_opacity=0.4).move_to(sun_center)
+        sun_label = Text("Wintersonne", font_size=BODY_FONT_SIZE, color=COLOR_G)
+        sun_group = VGroup(sun, sun_glow)
+        # One translucent beam wedge from the sun to the slab — the same
+        # low-opacity solar fill the other scenes use for Strahlung (Beat 5's
+        # summer/winter beams), not a fan of stroke lines.
+        sun_beam = Polygon(
+            sun_center, [-1.7, -0.95, 0], [1.2, -0.95, 0],
+            fill_color=COLOR_G, fill_opacity=0.2,
+            stroke_color=COLOR_G, stroke_opacity=0.35, stroke_width=1,
+        )
+
+        moon = Text("☾", font_size=FORMULA_FONT_SIZE, color="#94A3B8").move_to([4.1, 1.0, 0])
+        moon_label = Text("Nachthimmel", font_size=BODY_FONT_SIZE, color="#94A3B8")
+        night_group = VGroup(moon, moon_label)
+
+        def make_wavy_line(x_pos):
+            # Shortened from 18 steps (post-scale top kept reaching rad_label
+            # regardless of how far up the label got pushed) to 11 — reads the
+            # same as a heat-radiation squiggle, with real headroom above it.
+            points = []
+            for step in range(11):
+                y = -0.95 + step * 0.09
+                x = x_pos + 0.07 * np.sin(step * 0.6)
+                points.append([x, y, 0])
+            curve = VMobject()
+            curve.set_points_smoothly([np.array(p) for p in points])
+            curve.set_color(COLOR_HEAT)
+            curve.set_stroke(width=2, opacity=0.8)
+            return curve
+
+        wavy_lines = VGroup(*[make_wavy_line(x) for x in [-2.1, -1.2, -0.3, 0.6, 1.5, 2.3]])
+        rad_label = Text("Gespeicherte Wärme", font_size=BODY_FONT_SIZE, color=COLOR_HEAT)
+
+        stage = VGroup(
+            floor_slab, room_group,
+            sun_group, sun_beam, night_group, wavy_lines,
+        )
+        sun_beam.set_fill(opacity=0)
+        sun_beam.set_stroke(opacity=0)
+        for m in (phase_2, night_group, wavy_lines):
+            m.set_opacity(0)
+        # Core opaque; glow ring soft — set targets before FadeIn.
+        sun.set_fill(COLOR_G, opacity=1.0)
+        sun_glow.set_stroke(opacity=0)
+        # Normal scale; park building + related objects lower above the caption.
+        stage.scale(1.2)
+        core = VGroup(floor_slab, room_group)
+        stage.shift([-core.get_center()[0], 0, 0])
+        band_bot = max(CONTENT_BOTTOM_MIN, caption.get_top()[1] + 0.4)
+        stage.shift(DOWN * (core.get_bottom()[1] - band_bot))
+        # Phase titles sit just above the lowered room (type scale).
+        phase_1.next_to(core, UP, buff=0.4)
+        if phase_1.get_top()[1] > subtitle.get_bottom()[1] - 0.2:
+            stage.shift(DOWN * (phase_1.get_top()[1] - (subtitle.get_bottom()[1] - 0.2)))
+            phase_1.next_to(core, UP, buff=0.35)
+            if core.get_bottom()[1] < band_bot:
+                stage.shift(UP * (band_bot - core.get_bottom()[1]))
+                phase_1.next_to(core, UP, buff=0.3)
+        phase_2.move_to(phase_1.get_center())
+        # Type-scale callouts (do not scale Text with the room).
+        floor_label.move_to(floor_slab.get_center())
+        sun_label.next_to(sun, UR, buff=0.18)
+        moon_label.next_to(moon, UP, buff=0.12)
+        rad_label.next_to(floor_slab, UP, buff=1.3)
+        rad_label.set_opacity(0)
+        sun_label.set_opacity(0)
+
+        self.play(
+            Create(room_group), Create(floor_slab), FadeIn(floor_label),
+            FadeIn(sun), FadeIn(sun_label), FadeIn(phase_1),
+            sun_glow.animate.set_stroke(opacity=0.4),
+            run_time=1.6,
+        )
+        sun_beam.set_fill(COLOR_G, opacity=0.2)
+        sun_beam.set_stroke(COLOR_G, width=1, opacity=0.35)
+        self.play(GrowFromPoint(sun_beam, sun_center), run_time=1.2)
+        self.play(
+            floor_slab.animate.set_color(COLOR_HEAT).set_fill(COLOR_HEAT, opacity=0.9),
+            run_time=1.8,
+        )
+        hold_for(self, self.NARRATION, "day", used=1.6 + 1.2 + 1.8 + 0.3)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "night"))
+        phase_2.set_opacity(1)
+        night_group.set_opacity(1)
+        self.play(
+            FadeOut(sun_beam), FadeOut(sun_group), FadeOut(sun_label),
+            ReplacementTransform(phase_1, phase_2),
+            FadeIn(night_group),
+            run_time=1.4,
+        )
+        wavy_lines.set_opacity(1)
+        rad_label.set_opacity(1)
+        self.play(
+            LaggedStart(*[Create(wl) for wl in wavy_lines], lag_ratio=0.12),
+            FadeIn(rad_label),
+            run_time=1.8,
+        )
+        self.play(
+            wavy_lines.animate.shift(UP * 0.12),
+            floor_slab.animate.set_fill("#D97706", opacity=0.75),
+            run_time=1.2,
+        )
+        hold_for(self, self.NARRATION, "night", used=1.4 + 1.8 + 1.2 + 0.35)
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion
+
+

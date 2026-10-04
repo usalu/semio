@@ -24,7 +24,8 @@ def main():
         ("Beat4_SpezWaermekapazitaet", base_dir / "beat_4_audio.mp3"),
         ("Beat5_Lueftungsverlust", base_dir / "beat_5_audio.mp3"),
         ("Beat6_Waermerueckgewinnung", base_dir / "beat_6_audio.mp3"),
-        ("Beat7_Lueftungssysteme", base_dir / "beat_7_audio.mp3"),
+        ("Beat7_KippOderStoss", base_dir / "beat_7_audio.mp3"),
+        ("Beat8_Lueftungssysteme", base_dir / "beat_8_audio.mp3"),
     ]
 
     def resolve_audio(path: Path) -> Path:

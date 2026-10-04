@@ -299,15 +299,11 @@ def _box_exit(p, u, box):
     return hi if hi >= lo else None
 
 
-RAY_REACH = 2.3
-
-
 def _sun_rays(elev: float, geo: dict, boxes, heights, sun_at):
     """☀️ Parallel straight rays at one elevation — each stops at the first shade, wall or room surface it meets.
 
-    ``heights`` are the facade-plane heights the rays aim at; every ray starts at
-    most ``RAY_REACH`` out from the facade and fades in from transparent, so the
-    parallel bundle never reads wider than the sun.
+    ``heights`` are the facade-plane heights the rays aim at; every ray starts
+    on the wave front through the drawn sun.
     """
     u = _sun_dir(elev)
     rays = VGroup()
@@ -320,8 +316,8 @@ def _sun_rays(elev: float, geo: dict, boxes, heights, sun_at):
             end = _room_hit(p, elev, geo)
         else:
             end = p
-        start = p + u * min(RAY_REACH, max(float(np.dot(np.asarray(sun_at) - p, u)) - 0.6, 0.3))
-        rays.add(radiation_ray(start, end, color=COLOR_G, stroke_width=1.8).set_stroke(opacity=[0.0, 0.7, 0.7]))
+        start = p + u * max(float(np.dot(np.asarray(sun_at) - p, u)) - 0.45, 0.3)
+        rays.add(radiation_ray(start, end, color=COLOR_G, stroke_width=2.0))
     return rays
 
 
@@ -829,7 +825,7 @@ class Beat4_SaisonaleWinkel(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "winter"))
         rays = always_redraw(lambda: _sun_rays(elev.get_value(), geo, boxes, heights, sun_at()))
         patch = always_redraw(lambda: _patch_mob(_sun_patch(elev.get_value(), geo, edges)))
-        self.play(FadeOut(rays_now), FadeOut(patch_now), run_time=0.6)
+        self.remove(rays_now, patch_now)
         self.add(patch, rays)
         self.play(
             elev.animate.set_value(ELEV_WINTER),
@@ -847,45 +843,28 @@ class Beat4_SaisonaleWinkel(Scene):
 
 
 #region Beat5 — Verschattung
-COLOR_BLIND = "#9CC9C2"
-FSH_BLIND = 0.15
-
-
-def _hatch(rect, spacing: float = 0.2):
-    """〽️ 45° hatch clipped to a rectangle — the architectural cut convention."""
-    x0, x1 = float(rect.get_left()[0]), float(rect.get_right()[0])
-    y0, y1 = float(rect.get_bottom()[1]), float(rect.get_top()[1])
-    lines, c = VGroup(), x0 - y1
-    while c <= x1 - y0:
-        xs, xe = max(x0, c + y0), min(x1, c + y1)
-        if xe - xs > 1e-3:
-            lines.add(Line([xs, xs - c, 0], [xe, xe - c, 0], color=P_WHITE, stroke_width=1.0, stroke_opacity=0.35))
-        c += spacing
-    return lines
-
-
 class Beat5_Verschattung(Scene):
-    """⛱️ Vertical section: unshaded beam, a Raffstore that reflects it, the residue — F_sh on a 0…1 scale."""
+    """⛱️ F_sh as the sunlit glass share: a blind takes it from 1 to 0, an overhang from 0,05 in summer to 0,80 in winter."""
 
     NARRATION = [
-        ("intro",
-         "A vertical section through window and facade.",
-         "Ein Vertikalschnitt durch Fenster und Fassade."),
-        ("unshaded",
-         "Without shading the full radiation reaches the glass and the room: F-sh is 1.",
-         "Ohne Verschattung trifft die volle Strahlung Glas und Raum: F-sh ist 1."),
-        ("raffstore",
-         "An external Raffstore drops in front. Its slats catch the radiation and send it back outside.",
-         "Ein außenliegender Raffstore senkt sich davor. Seine Lamellen fangen die Strahlung ab und werfen sie zurück."),
-        ("reduced",
-         "Only a small residue gets through — F-sh falls to about 0.15.",
-         "Nur ein Restanteil kommt durch — F-sh sinkt auf etwa 0,15."),
+        ("blind",
+         "An external blind lowers over the glass. The shading factor F-sh is the sunlit share of the glass — it falls from 1 to 0.",
+         "Ein außenliegender Raffstore senkt sich vor das Glas. F-sh ist der besonnte Glasanteil — er fällt von 1 auf 0."),
+        ("open",
+         "Closed, no direct sun reaches the room; raised again, all 323 watts count.",
+         "Geschlossen kommt keine direkte Sonne in den Raum; hochgefahren zählen wieder alle 323 Watt."),
+        ("awning",
+         "A fixed overhang above the window shades depending on the sun's elevation.",
+         "Ein fester Überhang über dem Fenster verschattet je nach Sonnenhöhe."),
+        ("summer",
+         "The high summer sun hardly reaches the glass: F-sh about 0.05.",
+         "Die hohe Sommersonne erreicht kaum noch das Glas: F-sh rund 0,05."),
         ("winter",
-         "In winter the blind stays up; the roof overhang shades the low sun only a little — F-sh about 0.8.",
-         "Im Winter bleibt der Raffstore oben. Der Dachüberstand verschattet die flache Sonne nur wenig — F-sh rund 0,8."),
+         "The low winter sun slips underneath: F-sh 0.80.",
+         "Die flache Wintersonne gleitet darunter: F-sh 0,80."),
         ("fsh",
-         "F-sh is the last factor of the solar equation.",
-         "F-sh ist der letzte Faktor der solaren Gleichung."),
+         "Shading factor times 323 watts: about 258 watts per window in winter.",
+         "Verschattungsfaktor mal 323 Watt: im Winter rund 258 Watt pro Fenster."),
     ]
 
     def construct(self):
@@ -895,160 +874,149 @@ class Beat5_Verschattung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Verschattungsfaktor", title)
-        din = _din_ref("DIN V 18599-2 · DIN 4108-2")
+        din = _din_ref("DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
-        caption = caption_bar(subtitle_text(N, "intro"))
+
+        caption = caption_bar(subtitle_text(N, "blind"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        #region section
-        glass_out, glass_in = -3.5, -3.3
-        wall_top, wall_bottom = 1.55, -0.85
-        lintel = Rectangle(width=0.5, height=0.6, color=P_WHITE, stroke_width=2.5, fill_color="#161A21",
-                           fill_opacity=1.0).move_to([-3.4, wall_top + 0.3, 0])
-        sill = Rectangle(width=0.5, height=0.6, color=P_WHITE, stroke_width=2.5, fill_color="#161A21",
-                         fill_opacity=1.0).move_to([-3.4, wall_bottom - 0.3, 0])
-        masonry = VGroup(lintel, sill, _hatch(lintel), _hatch(sill)).set_z_index(3)
-        glazing = VGroup(*[Line([x, wall_bottom, 0], [x, wall_top, 0], color=COLOR_WIN, stroke_width=3)
-                           for x in (glass_out, glass_in)]).set_z_index(3)
-        slab_left, room_end_x = lintel.get_right()[0], -0.7
-        ceiling_y, floor_y = lintel.get_top()[1], sill.get_bottom()[1]
-        room = VGroup(
-            Line([slab_left, ceiling_y, 0], [room_end_x, ceiling_y, 0], color=P_WHITE, stroke_width=2.5),
-            Line([slab_left, floor_y, 0], [room_end_x, floor_y, 0], color=COLOR_FRAME, stroke_width=4),
-            Line([room_end_x, floor_y, 0], [room_end_x, ceiling_y, 0], color=P_WHITE, stroke_width=2.5),
-        )
-        lbl_out = Text("außen", font_size=BODY_FONT_SIZE, color=COLOR_FRAME).move_to([-6.2, 0.35, 0])
-        lbl_in = Text("innen", font_size=BODY_FONT_SIZE, color=COLOR_FRAME).move_to([-1.55, 1.6, 0])
-        self.play(Create(masonry), Create(glazing), Create(room), run_time=1.6)
-        self.play(FadeIn(lbl_out), FadeIn(lbl_in), run_time=0.6)
-        hold_for(self, N, "intro", used=2.2 + 0.3)
+        #region room, sun and shades
+        geo = _room_geo(-0.3, -1.35, 1.0)
+        room = _section_room(geo)
+        heights = np.linspace(geo["y_f"] + 0.15, geo["y_c"] + geo["slab"] - 0.03, 10)
+        hub = np.array([geo["x_w"], geo["y_f"], 0.0])
+        radius = 3.5
+        elev = ValueTracker(ELEV_WINTER)
+        box_top = geo["y_t"] + 0.1
+        blind_x0, blind_x1 = geo["x_w"] + 0.03, geo["x_w"] + 0.16
+        blind_y = ValueTracker(box_top)
+        awning = ValueTracker(0.0)
+        state = {"blind": True}
+
+        def sun_at():
+            return hub + radius * _sun_dir(elev.get_value())
+
+        def shade_boxes():
+            boxes = [room["roof_box"]]
+            if state["blind"]:
+                boxes += [(blind_x0, blind_x1, blind_y.get_value(), box_top),
+                          (geo["x_w"], geo["x_w"] + 0.2, box_top, box_top + 0.16)]
+            if awning.get_value() > 1e-4:
+                boxes.append((geo["x_w"], geo["x_w"] + awning.get_value() * geo["s"], geo["y_t"], geo["y_t"] + 0.07))
+            return boxes
+
+        def edges():
+            return [(b[1], b[2]) for b in shade_boxes()]
+
+        def fsh():
+            return _shade_factor(elev.get_value(), geo, edges())
+
+        def lit_glass():
+            x = geo["x_w"] - geo["wall"] / 2
+            top = geo["y_s"] + fsh() * (geo["y_t"] - geo["y_s"])
+            return VGroup(
+                Line([x, geo["y_s"], 0], [x, max(top, geo["y_s"] + 1e-3), 0], color=COLOR_G, stroke_width=8),
+                Line([x, min(top, geo["y_t"] - 1e-3), 0], [x, geo["y_t"], 0], color=GREY_B, stroke_width=4),
+            )
+
+        def blind_mob():
+            slats = VGroup(*[
+                Line([blind_x0, y + 0.03, 0], [blind_x1, y - 0.03, 0], color=P_TEAL, stroke_width=4)
+                for y in np.arange(box_top - 0.04, blind_y.get_value() - 1e-6, -0.07)
+            ])
+            return slats
+
+        sun = _sun_glyph().move_to(sun_at())
+        sun.add_updater(lambda m: m.move_to(sun_at()))
+        rays = always_redraw(lambda: _sun_rays(elev.get_value(), geo, shade_boxes(), heights, sun_at()))
+        patch = always_redraw(lambda: _patch_mob(_sun_patch(elev.get_value(), geo, edges())))
+        glass_lit = always_redraw(lit_glass)
+        housing = _block(geo["x_w"], geo["x_w"] + 0.2, box_top, box_top + 0.16, color=P_TEAL, opacity=0.9)
+        blind = always_redraw(blind_mob)
+        awning_mob = always_redraw(lambda: _block(
+            geo["x_w"], geo["x_w"] + max(1e-3, awning.get_value() * geo["s"]), geo["y_t"], geo["y_t"] + 0.07,
+            color=COLOR_FSH, opacity=0.95))
+        room_label = Text("Wohnraum", font_size=BODY_FONT_SIZE, color=GREY)
+        room_label.move_to([geo["x_b"] + 0.2 + room_label.width / 2, geo["y_c"] - 0.28, 0])
+        device_at = np.array([geo["x_w"] - 0.25, geo["y_c"] - 0.34, 0.0])
+        blind_label = math_text(r"\text{Raffstore außen}", font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        blind_label.move_to(device_at + LEFT * blind_label.width / 2)
+        awning_read = math_readout(lambda: rf"\text{{Überhang}}\;{de_num(awning.get_value(), 2)}\,\mathrm{{m}}",
+                                   device_at, size=LABEL_FONT_SIZE, color=COLOR_FSH, edge="right")
+        col = 3.7
+        fsh_read = math_readout(
+            lambda: (rf"F_{{\mathrm{{sh}}}} = \frac{{\textcolor{{{COLOR_G}}}{{h_{{\mathrm{{besonnt}}}}}}}}"
+                     rf"{{h_{{\mathrm{{Glas}}}}}} = {de_num(fsh(), 2)}"),
+            [col, 1.5, 0], size=BODY_FONT_SIZE, color=P_WHITE)
+        norm = Text("DIN 4108-2", font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        norm.move_to([col + norm.width / 2, 0.95, 0])
+        phi_read = math_readout(
+            lambda: rf"\Phi = {de_num(PHI_G)}\,\mathrm{{W}} \cdot F_{{\mathrm{{sh}}}} = {de_num(PHI_G * fsh())}\,\mathrm{{W}}",
+            [col, 0.35, 0], size=LABEL_FONT_SIZE, color=P_WHITE)
+        elev_read = math_readout(lambda: rf"\text{{Sonnenhöhe}}\;{de_num(elev.get_value())}°",
+                                 [col, -0.45, 0], size=LABEL_FONT_SIZE, color=COLOR_G)
+        tag_w = Text("Winter, mittags", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        tag_w.move_to([col + tag_w.width / 2, -0.95, 0])
+        tag_s = Text("Sommer, mittags", font_size=LABEL_FONT_SIZE, color=COLOR_G)
+        tag_s.move_to([col + tag_s.width / 2, -0.95, 0])
+
+        self.play(Create(room["group"]), FadeIn(room_label), run_time=1.3)
+        self.add(sun)
+        self.play(FadeIn(sun, scale=0.6), FadeIn(elev_read), FadeIn(tag_w), run_time=0.7)
+        self.add(patch, rays, glass_lit)
+        self.play(FadeIn(patch), FadeIn(rays), FadeIn(glass_lit), FadeIn(fsh_read), FadeIn(norm),
+                  FadeIn(phi_read), run_time=1.0)
         #endregion
 
-        #region rays
-        d = np.array([0.75, -0.661, 0.0])
-        sun_c = np.array([-6.25, 1.85, 0.0])
-        sun = VGroup(*[Circle(radius=r, stroke_width=0, fill_color=COLOR_G, fill_opacity=o).move_to(sun_c)
-                       for r, o in ((0.62, 0.08), (0.45, 0.18), (0.28, 1.0))])
-        slat_x = -4.4
-        slat_ys = [1.35 - i * 0.32 for i in range(8)]
-        glass_ys = [y - 0.793 for y in slat_ys[:6]]
-
-        def ray(end, back=3.0, **kw):
-            return Line(end - d * back, end, color=COLOR_G, **kw)
-
-        def through(start):
-            t = min(t for t in ((floor_y - start[1]) / d[1], (room_end_x - start[0]) / d[0]) if t > 0.05)
-            return start + d * t
-
-        direct = VGroup(*[ray(np.array([glass_out, y, 0.0]), stroke_width=2.4, stroke_opacity=0.75).set_z_index(1)
-                          for y in glass_ys])
-        interior = VGroup(*[Line([glass_in, y, 0], through(np.array([glass_in, y, 0.0])), color=COLOR_G,
-                                 stroke_width=2.4, stroke_opacity=0.65).set_z_index(1) for y in glass_ys[:5]])
-        #endregion
-
-        #region F_sh scale
-        sx0, sx1, sy = 1.3, 5.9, 0.35
-        scale = VGroup(
-            Line([sx0, sy, 0], [sx1, sy, 0], color=P_WHITE, stroke_width=2),
-            *[Line([x, sy - 0.12, 0], [x, sy + 0.12, 0], color=P_WHITE, stroke_width=2) for x in (sx0, sx1)],
-        )
-        end_l = VGroup(math_label("0", size=BODY_FONT_SIZE), Text("ganz verschattet", font_size=LABEL_FONT_SIZE,
-                                                                 color=COLOR_FRAME)).arrange(DOWN, buff=0.1)
-        end_l.next_to([sx0, sy, 0], DOWN, buff=0.25)
-        end_r = VGroup(math_label("1", size=BODY_FONT_SIZE), Text("ohne Verschattung", font_size=LABEL_FONT_SIZE,
-                                                                 color=COLOR_FRAME)).arrange(DOWN, buff=0.1)
-        end_r.next_to([sx1, sy, 0], DOWN, buff=0.25)
-        fsh = ValueTracker(1.0)
-
-        def sx(v):
-            return sx0 + v * (sx1 - sx0)
-
-        marker = always_redraw(lambda: Triangle(stroke_width=0, fill_color=COLOR_G, fill_opacity=1.0)
-                               .scale(0.15).rotate(PI).move_to([sx(fsh.get_value()), sy + 0.24, 0]))
-        marker_lbl = math_readout(lambda: rf"F_{{\mathrm{{sh}}}} = {de_num(fsh.get_value(), 2)}",
-                                  lambda: np.array([sx(fsh.get_value()), sy + 0.55, 0]),
-                                  size=BODY_FONT_SIZE, color=COLOR_G, edge="center")
-        #endregion
-
-        caption = swap_caption(self, caption, subtitle_text(N, "unshaded"))
-        self.play(FadeIn(sun, scale=0.8), run_time=0.6)
-        self.play(LaggedStart(*[Create(r) for r in direct], lag_ratio=0.08), run_time=1.4)
-        self.play(LaggedStart(*[Create(r) for r in interior], lag_ratio=0.1), run_time=1.2)
-        self.play(Create(scale), FadeIn(end_l), FadeIn(end_r), run_time=0.8)
-        self.add(marker, marker_lbl)
-        self.play(FadeIn(marker), run_time=0.4)
-        hold_for(self, N, "unshaded")
-
-        #region Raffstore
-        caption = swap_caption(self, caption, subtitle_text(N, "raffstore"))
-        u = np.array([np.cos(48 * DEGREES), np.sin(48 * DEGREES), 0.0])
-        nrm = np.array([-u[1], u[0], 0.0])
-        refl_dir = d - 2 * float(np.dot(d, nrm)) * nrm
-        slats = VGroup(*[Rectangle(width=0.5, height=0.08, color=COLOR_BLIND, stroke_width=1.5, fill_color=COLOR_BLIND,
-                                   fill_opacity=0.85).move_to([slat_x, y, 0]).rotate(48 * DEGREES) for y in slat_ys])
-        rail = Rectangle(width=0.6, height=0.24, color=COLOR_BLIND, stroke_width=2, fill_color=COLOR_BLIND,
-                         fill_opacity=0.9).move_to([slat_x, 1.95, 0])
-        bracket = Line([slat_x + 0.3, 1.95, 0], [-3.65, 1.95, 0], color=COLOR_BLIND, stroke_width=2.5)
-        blind = VGroup(rail, bracket, slats).set_z_index(4)
-        lbl_blind = Text("Raffstore", font_size=LABEL_FONT_SIZE, color=COLOR_BLIND).move_to([-4.95, -1.45, 0])
-        blocked = VGroup(*[ray(np.array([glass_out, y, 0.0]), back=3.0 - 1.316, stroke_width=2.4, stroke_opacity=0.75)
-                           .shift(-d * 1.316).set_z_index(1) for y in glass_ys])
-        reflected = VGroup(*[Arrow([-4.487, y + 0.077, 0], np.array([-4.487, y + 0.077, 0]) + refl_dir * 1.3, buff=0,
-                                   color=COLOR_G, stroke_width=2.2, stroke_opacity=0.55,
-                                   max_tip_length_to_length_ratio=0.16).set_z_index(5) for y in slat_ys[:6]])
-        blind.shift(UP * 3.0).set_opacity(0)
+        #region blind 1 → 0
+        self.play(FadeIn(housing), FadeIn(blind_label), run_time=0.6)
         self.add(blind)
-        self.play(blind.animate.shift(DOWN * 3.0).set_opacity(1.0), fsh.animate.set_value(0.0), run_time=1.6)
-        self.play(FadeIn(lbl_blind, shift=UP * 0.15),
-                  *[Transform(r, c) for r, c in zip(direct, blocked)],
-                  LaggedStart(*[GrowArrow(a) for a in reflected], lag_ratio=0.08), FadeOut(interior), run_time=1.6)
-        hold_for(self, N, "raffstore")
+        self.play(blind_y.animate.set_value(geo["y_s"]), run_time=3.2, rate_func=linear)
+        hold_for(self, N, "blind", used=1.3 + 0.7 + 1.0 + 0.6 + 3.2 + 0.3)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "open"))
+        self.play(blind_y.animate.set_value(box_top), run_time=2.2)
+        self.play(FadeOut(housing), FadeOut(blind), run_time=0.5)
+        state["blind"] = False
+        self.remove(blind)
+        hold_for(self, N, "open")
         #endregion
 
-        #region residue
-        caption = swap_caption(self, caption, subtitle_text(N, "reduced"))
-        residual = VGroup(*[Line([-4.226, y + 0.193, 0], through(np.array([-4.226, y + 0.193, 0.0])), color=COLOR_G,
-                                 stroke_width=1.4, stroke_opacity=0.32).set_z_index(1) for y in slat_ys[:5]])
-        self.play(LaggedStart(*[Create(r) for r in residual], lag_ratio=0.1), fsh.animate.set_value(FSH_BLIND),
-                  run_time=1.8)
-        hold_for(self, N, "reduced")
-        #endregion
+        #region overhang and sun-elevation sweep
+        caption = swap_caption(self, caption, subtitle_text(N, "awning"))
+        self.add(awning_mob, awning_read)
+        self.play(FadeOut(blind_label), FadeIn(awning_read), run_time=0.4)
+        self.play(awning.animate.set_value(AWNING_DEPTH), run_time=1.8)
+        _freeze(awning_mob, awning_read)
+        hold_for(self, N, "awning")
 
-        #region winter: blind up, overhang
+        caption = swap_caption(self, caption, subtitle_text(N, "summer"))
+        self.play(elev.animate.set_value(ELEV_SUMMER), FadeTransform(tag_w, tag_s), run_time=2.6)
+        hold_for(self, N, "summer")
+
         caption = swap_caption(self, caption, subtitle_text(N, "winter"))
-        overhang = Rectangle(width=1.25, height=0.16, color=P_WHITE, stroke_width=2, fill_color="#161A21",
-                             fill_opacity=1.0).move_to([glass_out - 0.62, wall_top + 0.08, 0]).set_z_index(4)
-        lbl_over = Text("Dachüberstand", font_size=LABEL_FONT_SIZE, color=COLOR_FRAME).next_to(overhang, UP, buff=0.12)
-        winter_direct = VGroup(*[ray(np.array([glass_out, y, 0.0]), stroke_width=2.4, stroke_opacity=0.75).set_z_index(1)
-                                 for y in glass_ys[1:]])
-        winter_cut = ray(np.array([glass_out, glass_ys[0], 0.0]), back=3.0 - 1.45, stroke_width=2.4,
-                         stroke_opacity=0.75).shift(-d * 1.45).set_z_index(1)
-        winter_in = VGroup(*[Line([glass_in, y, 0], through(np.array([glass_in, y, 0.0])), color=COLOR_G,
-                                  stroke_width=2.4, stroke_opacity=0.65).set_z_index(1) for y in glass_ys[1:5]])
-        self.play(blind.animate.shift(UP * 3.0).set_opacity(0), FadeOut(lbl_blind), FadeOut(reflected),
-                  FadeOut(residual), FadeOut(direct), run_time=1.2)
-        self.play(FadeIn(overhang), FadeIn(lbl_over), Create(winter_cut),
-                  LaggedStart(*[Create(r) for r in winter_direct], lag_ratio=0.08), run_time=1.4)
-        self.play(LaggedStart(*[Create(r) for r in winter_in], lag_ratio=0.1),
-                  fsh.animate.set_value(FSH_WINTER), run_time=1.6)
+        tag_w2 = Text("Winter, mittags", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        tag_w2.move_to([col + tag_w2.width / 2, -0.95, 0])
+        self.play(elev.animate.set_value(ELEV_WINTER), FadeTransform(tag_s, tag_w2), run_time=2.6)
         hold_for(self, N, "winter")
         #endregion
 
         #region formula
         caption = swap_caption(self, caption, subtitle_text(N, "fsh"))
-        _freeze(marker, marker_lbl)
-        sym = math_label(r"F_{\mathrm{sh}}", size=BODY_FONT_SIZE, color=COLOR_G)
-        sym.move_to(marker_lbl.get_left() + RIGHT * sym.width / 2)
+        _freeze(sun, rays, patch, glass_lit, fsh_read, phi_read, elev_read)
         panel = math_panel([
-            ("phi", r"\Phi", P_WHITE), (None, "=", P_WHITE),
-            ("g_irr", "G", COLOR_G), (None, r"\cdot", P_WHITE),
+            ("phi", r"\Phi_{\mathrm{solar}}", P_WHITE), (None, "=", P_WHITE),
+            ("g", "G", COLOR_G), (None, r"\cdot", P_WHITE),
             ("a", "A", COLOR_A), (None, r"\cdot", P_WHITE),
             ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", P_WHITE),
-            ("g", "g", COLOR_GVAL), (None, r"\cdot", P_WHITE),
-            ("fsh", r"F_{\mathrm{sh}}", COLOR_G), (None, r"\;[\mathrm{W}]", P_WHITE),
-        ], edge_buff=1.35)
-        _fly_into(self, panel, {"fsh": sym})
-        ring = highlight_param(panel[2], "fsh", color=COLOR_G)
+            ("gval", "g", COLOR_GVAL), (None, r"\cdot", P_WHITE),
+            ("fsh", r"F_{\mathrm{sh}}", COLOR_FSH), (None, "=", P_WHITE),
+            ("pv", rf"{de_num(PHI_G)}\,\mathrm{{W}}", P_WHITE), (None, r"\cdot", P_WHITE),
+            ("fv", de_num(FSH_WINTER, 2), COLOR_FSH), (None, r"\approx", P_WHITE),
+            ("r", rf"{de_num(PHI_SOLAR)}\,\mathrm{{W}}", P_WHITE),
+        ])
+        _fly_into(self, panel, {"fv": fsh_read, "r": phi_read})
+        ring = highlight_param(panel[2], "fsh", color=COLOR_FSH)
         self.play(Create(ring), run_time=0.4)
         hold_for(self, N, "fsh")
         self.play(FadeOut(ring), run_time=0.25)

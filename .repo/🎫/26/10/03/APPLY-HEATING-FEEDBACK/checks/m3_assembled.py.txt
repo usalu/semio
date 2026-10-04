@@ -87,12 +87,6 @@ def _clip_below(points, y_cut: float) -> list:
     return out
 
 
-def _clip_above(points, y_cut: float) -> list:
-    """🪞 Part of a polygon above the line ``y = y_cut`` — ``_clip_below`` mirrored."""
-    flipped = _clip_below([(float(p[0]), -float(p[1])) for p in points], -y_cut)
-    return [np.array([p[0], -p[1]]) for p in flipped]
-
-
 def _level_for(polys, frac: float) -> float:
     """🌊 Height of the fill line below which ``frac`` of the polygons' area lies (bisection)."""
     ys = [float(np.array(p, dtype=float)[1]) for poly in polys for p in poly]
@@ -126,7 +120,7 @@ def _house_section(wall: float = 0.35, slab: float = 0.30, decke: float = 0.22, 
     Footprint 10 m × 8 m, eaves 6 m, ridge 8,5 m, Geschossdecke at 3 m. The roof
     thickness is measured perpendicular to the pitch, so the inner roof line drops
     by ``roof · √(1 + slope²)``. Gross and net volume both follow from the polygons.
-    https://de.wikipedia.org/wiki/DIN_V_18599
+    https://www.din.de/de/mitwirken/normenausschuesse/nabau/veroeffentlichungen/wdc-beuth:din21:288236370
     """
     w, depth, eave, ridge, floor2 = 10.0, 8.0, 6.0, 8.5, 3.0
     slope = (ridge - eave) / (w / 2)
@@ -244,7 +238,7 @@ def _scale_marks(scale, entries, *, x_text: float, gap: float = 0.08, bottom: fl
     for value, src, color in entries:
         y = scale["y_of"](value)
         dots.append(Dot([x, y, 0], radius=0.075, color=color))
-        labels.append(math_label(src, size=BODY_FONT_SIZE, color=color))
+        labels.append(math_label(src, size=LABEL_FONT_SIZE, color=color))
         ys.append(y)
     placed = list(ys)
     order = sorted(range(len(placed)), key=lambda i: -placed[i])
@@ -324,15 +318,15 @@ def _vent_room(ox: float, floor_y: float, k: float, title: str, color):
     sill, lintel, ceil = floor_y + 0.9 * k, floor_y + 2.2 * k, floor_y + h
     grey = "#5A6577"
     floor = Rectangle(width=w + t + 0.12, height=0.14, stroke_width=0, fill_color=grey, fill_opacity=1.0)
-    floor.move_to([ox - 0.12 + (w + t + 0.12) / 2, floor_y - 0.07, 0])
+    floor.move_to([ox - 0.06 + (w + t + 0.12) / 2, floor_y - 0.07, 0])
     ceiling = floor.copy().move_to([floor.get_center()[0], ceil + 0.07, 0])
-    back = Rectangle(width=0.12, height=h + 0.28, stroke_width=0, fill_color=grey, fill_opacity=1.0)
+    back = Rectangle(width=0.12, height=h, stroke_width=0, fill_color=grey, fill_opacity=1.0)
     back.move_to([ox - 0.06, floor_y + h / 2, 0])
     brust = Rectangle(width=t, height=sill - floor_y, stroke_width=0, fill_color=grey, fill_opacity=1.0)
     brust.move_to([(x_in + x_out) / 2, (floor_y + sill) / 2, 0])
     sturz = Rectangle(width=t, height=ceil - lintel, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.85)
     sturz.move_to([(x_in + x_out) / 2, (lintel + ceil) / 2, 0])
-    laibung = Rectangle(width=t, height=lintel - sill, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.14)
+    laibung = Rectangle(width=t, height=lintel - sill, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.32)
     laibung.move_to([(x_in + x_out) / 2, (sill + lintel) / 2, 0])
     sash = Rectangle(width=0.06, height=lintel - sill - 0.08, color=P_CYAN, stroke_width=2)
     sash.set_fill(P_CYAN, opacity=0.25).move_to([(x_in + x_out) / 2, (sill + lintel - 0.08) / 2, 0])
@@ -344,7 +338,7 @@ def _vent_room(ox: float, floor_y: float, k: float, title: str, color):
     valve = Circle(radius=0.065, color=P_WHITE, stroke_width=2).set_fill(P_DEEP_DARK, 1.0)
     valve.move_to([x_in - 0.08, rad.get_top()[1] - 0.06, 0])
     head = math_label(title, size=BODY_FONT_SIZE, color=color)
-    head.move_to([ox + w / 2, ceil + 0.36, 0])
+    head.move_to([ox + w / 2, ceil + 0.42, 0])
     return {
         "x_in": x_in, "x_out": x_out, "sill": sill, "lintel": lintel, "ceil": ceil, "floor": floor_y,
         "ox": ox, "w": w, "k": k, "rad": rad, "ribs": ribs, "valve": valve, "sash": sash,
@@ -366,7 +360,7 @@ def _valve_dial(room, opening):
 
 #region Energy bar rows
 def _energy_row(x0: float, y: float, unit: float, parts, *, height: float = 0.5):
-    """🧱 Horizontal stacked bar redrawn every frame from ``(value_fn, colour)`` parts in Wh."""
+    """📊 Horizontal stacked bar redrawn every frame from ``(value_fn, colour)`` parts in Wh."""
     def build():
         row, cursor = VGroup(), x0
         for fn, colour in parts:
@@ -578,6 +572,7 @@ class Beat2_Innenvolumen(Scene):
         depth_vec = np.array([0.44, 0.32, 0.0])
         outer_pts = _to_scene(H["outer"], O, S)
         outline = Polygon(*outer_pts, color="#8A9BA8", stroke_width=3)
+        ground = Line(O + LEFT * 0.9, O + RIGHT * (H["w"] * S + 1.3), color="#5A6577", stroke_width=2)
         x_l, x_r = outer_pts[0][0], outer_pts[1][0]
         w_dim = dim_arrow([x_l, O[1] - 0.24, 0], [x_r, O[1] - 0.24, 0])
         w_lbl = math_label(rf"{de_num(H['w'])}\,\mathrm{{m}}", np.array([(x_l + x_r) / 2, O[1] - 0.52, 0]),
@@ -593,7 +588,7 @@ class Beat2_Innenvolumen(Scene):
             [-6.6, 1.75, 0], [-5.2, 2.2, 0], [-6.75, 0.2, 0], [-2.35, 2.25, 0], [-1.05, 1.95, 0],
             [-0.75, -0.35, 0], [-1.25, -0.95, 0], [-6.75, -0.75, 0],
         )])
-        self.play(Create(outline), FadeIn(air_out), run_time=1.4)
+        self.play(Create(ground), Create(outline), FadeIn(air_out), run_time=1.4)
         self.play(GrowFromCenter(w_dim), FadeIn(w_lbl), GrowFromCenter(e_dim), FadeIn(e_lbl),
                   GrowFromCenter(r_dim), FadeIn(r_lbl), run_time=1.2)
         hold_for(self, N, "intro", used=2.6 + 0.3)
@@ -628,7 +623,6 @@ class Beat2_Innenvolumen(Scene):
             np.array([x0, 1.28, 0]), size=BODY_FONT_SIZE, color=P_WHITE)
         self.add(back_mob, ve_read)
         self.play(depth.animate.set_value(H["depth"]), run_time=1.8, rate_func=linear)
-        ve_read.clear_updaters()
         d_start = outer_pts[1] + RIGHT * 0.12 + DOWN * 0.1
         d_dim = dim_arrow(d_start, d_start + depth_vec)
         d_lbl = math_label(rf"{de_num(H['depth'])}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
@@ -661,13 +655,12 @@ class Beat2_Innenvolumen(Scene):
             self.play(*[Indicate(pieces[g], color=P_WHITE, scale_factor=1.0) for g in group], run_time=0.5)
             self.play(*[FadeOut(pieces[g], scale=0.8) for g in group],
                       removed.animate.increment_value(share), run_time=0.9)
-        inner_d = ValueTracker(H["depth"])
         di_read = math_readout(
             lambda: rf"d_{{\mathrm{{i}}}} = {de_num(H['depth'])} - 2 \cdot {de_num(H['wall'], 2)} = "
-                    rf"{de_num(inner_d.get_value(), 2)}\,\mathrm{{m}}",
+                    rf"{de_num(depth.get_value(), 2)}\,\mathrm{{m}}",
             np.array([x0, 0.05, 0]), size=BODY_FONT_SIZE, color=P_WHITE)
         self.add(di_read)
-        self.play(inner_d.animate.set_value(H["d_i"]), run_time=1.0)
+        self.play(depth.animate.set_value(H["d_i"]), run_time=1.0)
         hold_for(self, N, "subtract")
         #endregion
 
@@ -679,27 +672,11 @@ class Beat2_Innenvolumen(Scene):
         def net_area():
             return sum(_shoelace(_clip_below(r, lvl.get_value())) for r in rooms)
 
-        off_front = depth_vec * H["wall"] / H["depth"]
-        off_back = depth_vec * (H["depth"] - H["wall"]) / H["depth"]
-
-        def prism(pts, *, fill: float, stroke: float):
-            if len(pts) < 3:
-                return VGroup()
-            front = [p + off_front for p in _to_scene(pts, O, S)]
-            back = [p + off_back for p in _to_scene(pts, O, S)]
-            faces = VGroup(Polygon(*back, stroke_color=P_ORANGE, stroke_width=stroke, stroke_opacity=0.55,
-                                   fill_color=P_ORANGE, fill_opacity=fill * 0.45))
-            for a, b in zip(range(len(front)), list(range(1, len(front))) + [0]):
-                faces.add(Polygon(front[a], front[b], back[b], back[a], stroke_width=0,
-                                  fill_color=P_ORANGE, fill_opacity=fill * 0.35))
-            faces.add(*[Line(f, k, color=P_ORANGE, stroke_width=stroke, stroke_opacity=0.7) for f, k in zip(front, back)])
-            faces.add(Polygon(*front, stroke_color=P_ORANGE, stroke_width=stroke, fill_color=P_ORANGE, fill_opacity=fill))
-            return faces
-
         room_fill = always_redraw(lambda: VGroup(*[
-            prism(_clip_below(r, lvl.get_value()), fill=0.5, stroke=0.0) for r in rooms
+            _poly(_clip_below(r, lvl.get_value()), O, S, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.5)
+            for r in rooms
         ]))
-        room_edges = VGroup(*[prism(r, fill=0.0, stroke=1.6) for r in rooms])
+        room_edges = VGroup(*[_poly(r, O, S, color=P_ORANGE, stroke_width=1.6) for r in rooms])
         v_read = math_readout(
             lambda: rf"V = {de_num(net_area(), 1)} \cdot {de_num(H['d_i'], 2)} = {de_num(net_area() * H['d_i'])}\,\mathrm{{m^{{3}}}}",
             np.array([x0, -0.52, 0]), size=BODY_FONT_SIZE, color=P_ORANGE)
@@ -707,7 +684,7 @@ class Beat2_Innenvolumen(Scene):
         self.play(Create(room_edges), outline.animate.set_stroke(opacity=0.55), run_time=0.6)
         self.play(lvl.animate.set_value(H["top_in"]), run_time=2.4, rate_func=linear)
         og_c = np.mean(_to_scene(rooms[1], O, S), axis=0)
-        v_sym = math_label("V", np.array([og_c[0], og_c[1] - 0.12, 0]) + off_front, size=FORMULA_FONT_SIZE, color=P_WHITE)
+        v_sym = math_label("V", np.array([og_c[0], og_c[1] - 0.12, 0]), size=FORMULA_FONT_SIZE, color=P_WHITE)
         self.play(FadeIn(v_sym, scale=1.3), run_time=0.5)
         hold_for(self, N, "fill")
         #endregion
@@ -753,16 +730,6 @@ class Beat2_Innenvolumen(Scene):
 
 
 #region Beat3 – Air change rate n: animated exchange and a scale of uses
-AIR_CHANGE_USES = [
-    ("lager", 0.0, r"\text{Lagerraum ohne Nutzung}", GREY_B),
-    ("passiv", 0.3, r"\text{Passivhaus mit Lüftungsanlage}", P_GREEN),
-    ("buero", 2.0, r"\text{Büro}", P_CYAN),
-    ("klasse", 4.0, r"\text{Klassenzimmer}", P_YELLOW),
-    ("kueche", 15.0, r"\text{Gewerbeküche}", P_ORANGE),
-    ("op", 20.0, r"\text{Operationssaal}", P_RED),
-]
-
-
 class Beat3_Luftwechselrate(Scene):
     """🔄 Fresh air replaces room air at the rate n; typical uses morph onto a logarithmic n scale."""
 
@@ -796,6 +763,14 @@ class Beat3_Luftwechselrate(Scene):
          "Eine Gewerbeküche etwa 15, ein Operationssaal nach DIN 1946-4 etwa 20 — dort ist die Luft alle 3 Minuten neu."),
     ]
 
+    USES = [
+        ("lager", 0.0, r"\text{Lagerraum ohne Nutzung}", GREY_B),
+        ("passiv", 0.3, r"\text{Passivhaus mit Lüftungsanlage}", P_GREEN),
+        ("buero", 2.0, r"\text{Büro}", P_CYAN),
+        ("klasse", 4.0, r"\text{Klassenzimmer}", P_YELLOW),
+        ("kueche", 15.0, r"\text{Gewerbeküche}", P_ORANGE),
+        ("op", 20.0, r"\text{Operationssaal}", P_RED),
+    ]
 
     def construct(self):
         apply_scene_style(self)
@@ -813,15 +788,10 @@ class Beat3_Luftwechselrate(Scene):
         S, O = 0.36, np.array([-6.3, -1.3, 0.0])
         outer = HOUSE["outer"]
         house_line = _poly(outer, O, S, color=P_WHITE, stroke_width=3)
+        warm = _poly(outer, O, S, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.32)
         frac = ValueTracker(0.0)
-
-        def fill_y():
-            return _level_for([outer], frac.get_value()) if frac.get_value() > 1e-3 else -1.0
-
-        warm = always_redraw(lambda: _poly(_clip_above(outer, fill_y()), O, S, stroke_width=0, fill_color=P_ORANGE,
-                                           fill_opacity=0.32))
-        fresh = always_redraw(lambda: _poly(_clip_below(outer, fill_y()), O, S, stroke_width=0, fill_color=P_BLUE,
-                                            fill_opacity=0.45))
+        fresh = always_redraw(lambda: _poly(_clip_below(outer, _level_for([outer], frac.get_value())) if frac.get_value() > 1e-3 else [],
+                                            O, S, stroke_width=0, fill_color=P_BLUE, fill_opacity=0.45))
         inlet = Line(O + UP * 0.12, O + UP * 0.45, color=P_BLUE, stroke_width=5)
         outlet_x = O[0] + HOUSE["w"] * S
         outlet = Line([outlet_x, O[1] + 1.6, 0], [outlet_x, O[1] + 1.95, 0], color=P_ORANGE, stroke_width=5)
@@ -903,25 +873,25 @@ class Beat3_Luftwechselrate(Scene):
         self.add(fresh_static)
         self.play(*[FadeOut(m) for m in (fresh_read, pct_read, flow_read, full, t_read, n_lbl, inlet, outlet, warm)],
                   run_time=0.6)
-        scale = _n_scale(0.6, -0.62, 2.0, zero_drop=0.4)
-        stage = np.array([-3.0, 0.4, 0.0])
-        clock_pos = np.array([-5.6, 0.4, 0.0])
+        scale = _n_scale(0.15, -1.05, 1.95)
+        stage = np.array([-3.4, 0.35, 0.0])
+        clock_pos = np.array([-5.75, 0.35, 0.0])
         house = VGroup(house_line, fresh_static, v_lbl)
         hours.set_value(0.0)
         minutes.set_value(0.0)
-        self.play(FadeIn(scale["group"]), house.animate.scale_to_fit_height(1.35).move_to(stage),
+        self.play(FadeIn(scale["group"]), house.animate.scale_to_fit_height(1.1).move_to(stage),
                   clock["group"].animate.scale(0.62).move_to(clock_pos), run_time=1.2)
 
         entries = [(N_RATE, r"\text{Wohnung} \approx 0{,}5", P_ORANGE)] + [
-            (n, rf"{name} \approx {de_num(n, 1) if 0 < n < 1 else de_num(n)}", c) for _k, n, name, c in AIR_CHANGE_USES
+            (n, rf"{name} \approx {de_num(n, 1) if 0 < n < 1 else de_num(n)}", c) for _k, n, name, c in self.USES
         ]
-        dots, labels, leaders = _scale_marks(scale, entries, x_text=1.2, bottom=-1.15)
+        dots, labels, leaders = _scale_marks(scale, entries, x_text=0.75)
         count = ValueTracker(0.0)
 
         def stage_label(name, color):
-            top = math_label(name, size=BODY_FONT_SIZE, color=color).move_to(stage + UP * 0.95)
+            top = math_label(name, size=LABEL_FONT_SIZE, color=color).move_to(stage + UP * 0.85)
             val = math_readout(lambda: rf"n = {de_num(count.get_value(), 1)}\,\mathrm{{h^{{-1}}}}",
-                               stage + DOWN * 1.05, size=BODY_FONT_SIZE, color=color, edge="center")
+                               stage + DOWN * 0.92, size=LABEL_FONT_SIZE, color=color, edge="center")
             return top, val
 
         def show_use(glyph, name, value, color, idx):
@@ -944,14 +914,12 @@ class Beat3_Luftwechselrate(Scene):
         for key, idxs in (("low", (0, 1)), ("mid", (2, 3)), ("high", (4, 5))):
             caption = swap_caption(self, caption, subtitle_text(N, key))
             for i in idxs:
-                kind, value, name, color = AIR_CHANGE_USES[i]
-                show_use(_use_glyph(kind, color), name, value, color, i + 1)
+                kind, value, name, color = self.USES[i]
+                show_use(_use_glyph(kind, color).scale(0.85), name, value, color, i + 1)
             if key == "high":
                 renew = math_label(rf"\frac{{60\,\mathrm{{min}}}}{{{de_num(20.0)}}} = {de_num(60 / 20.0)}\,\mathrm{{min}}",
                                    stage + DOWN * 0.1, size=BODY_FONT_SIZE, color=P_RED)
-                self.wait(1.0)
-                self.play(TransformFromCopy(labels[6], renew), run_time=1.5)
-                self.play(Indicate(renew, color=P_RED, scale_factor=1.12), run_time=0.8)
+                self.play(TransformFromCopy(labels[6], renew), run_time=0.8)
             hold_for(self, N, key)
         #endregion
 
@@ -976,7 +944,7 @@ class Beat4_SpezWaermekapazitaet(Scene):
          "Ein Heizelement erwärmt diesen Kubikmeter von unten."),
         ("heat",
          "From 20 to 21 degrees it takes 1.2 times 1005, that is 1206 joules.",
-         "Von 20 auf 21 °C braucht es 1,2 mal 1005, also 1206 Joule."),
+         "Von 20 auf 21 °C braucht es 1,2 mal 1 005, also 1 206 Joule."),
         ("c_luft",
          "The energy per cubic metre and kelvin is the volumetric heat capacity of air, written c Luft — about 0.34 watt-hours.",
          "Die Energie pro Kubikmeter und Kelvin ist die volumenbezogene Wärmekapazität der Luft, geschrieben c-Luft — etwa 0,34 Wattstunden."),
@@ -1150,7 +1118,7 @@ class Beat5_Lueftungsverlust(Scene):
          "Und Delta-Theta ist die Temperaturdifferenz: 20 Kelvin."),
         ("result",
          "Together: 440 times 0.5 times 0.34 times 20 — about 1500 watts of ventilation heat loss.",
-         "Zusammen: 440 mal 0,5 mal 0,34 mal 20 — rund 1500 Watt Lüftungswärmeverlust."),
+         "Zusammen: 440 mal 0,5 mal 0,34 mal 20 — rund 1 500 Watt Lüftungswärmeverlust."),
     ]
 
     def construct(self):
@@ -1198,8 +1166,8 @@ class Beat5_Lueftungsverlust(Scene):
         )
         dt_brace = BraceBetweenPoints([xt - 0.3, y_e - 0.12, 0], [xt - 0.3, y_i + 0.12, 0], direction=LEFT, color=P_YELLOW)
         dt_read = math_readout(lambda: rf"\Delta\theta = \theta_{{\mathrm{{i}}}} - \theta_{{\mathrm{{e}}}} = {de_num(th_i.get_value())}\,\mathrm{{K}}",
-                               np.array([xt - 2.25, 0.52, 0]), size=BODY_FONT_SIZE, color=P_YELLOW, edge="center")
-        dt_sub = Text("Temperaturdifferenz", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to([xt - 2.25, 0.02, 0])
+                               np.array([xt - 0.85, 0.52, 0]), size=BODY_FONT_SIZE, color=P_YELLOW, edge="right")
+        dt_sub = Text("Temperaturdifferenz", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to([xt - 2.6, 0.02, 0])
         self.play(FadeIn(t_outside, shift=LEFT * 0.2), FadeIn(t_inside[1], shift=LEFT * 0.2), GrowFromCenter(dt_brace),
                   FadeIn(dt_sub), run_time=1.0)
         self.add(t_inside[0], dt_read)
@@ -1238,7 +1206,7 @@ class Beat5_Lueftungsverlust(Scene):
         cy = 0.95
         cards = {}
         for (key, sym, name, value, digits, unit, color), x in zip(specs, xs):
-            frame = RoundedRectangle(width=card_w, height=1.62, corner_radius=0.1, color=color, stroke_width=1.8)
+            frame = RoundedRectangle(width=card_w, height=1.45, corner_radius=0.1, color=color, stroke_width=1.8)
             frame.set_fill(P_DEEP_DARK, 0.82).move_to([x, cy, 0])
             head = math_label(sym, np.array([x, cy + 0.32, 0]), size=FORMULA_FONT_SIZE, color=color)
             cap = Text(name, font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to([x, cy - 0.12, 0])
@@ -1292,7 +1260,7 @@ class Beat6_Waermerueckgewinnung(Scene):
          "Die Abluft gibt ihre Wärme an die Außenluft ab: je höher Eta, desto wärmer die Zuluft."),
         ("bars",
          "At eighty percent recovery, only twenty percent remains: about 300 instead of 1500 watts.",
-         "Bei achtzig Prozent Rückgewinnung bleiben zwanzig Prozent: rund 300 statt 1500 Watt."),
+         "Bei achtzig Prozent Rückgewinnung bleiben zwanzig Prozent: rund 300 statt 1 500 Watt."),
         ("eta",
          "Eta WRG is typically seventy to ninety percent for modern systems.",
          "Eta-WRG liegt typisch bei siebzig bis neunzig Prozent bei modernen Anlagen."),
@@ -1319,7 +1287,7 @@ class Beat6_Waermerueckgewinnung(Scene):
             ("c", r"c_{\mathrm{Luft}}", P_GREEN), (None, r"\cdot", None), ("dt", r"\Delta\theta", P_YELLOW),
             (None, r"\;[\mathrm{W}]", None),
         ])
-        old_note = math_label(r"\text{ohne WRG:}\; \eta_{\mathrm{WRG}} = 0", size=LABEL_FONT_SIZE, color=GREY_A)
+        old_note = math_label(r"\text{ohne WRG: }\eta_{\mathrm{WRG}} = 0", size=LABEL_FONT_SIZE, color=GREY_A)
         old_note.next_to(box_old, UP, buff=0.12)
         self.play(FadeIn(row_old), Create(box_old), FadeIn(old_note), run_time=1.3)
         hold_for(self, N, "without", used=1.3 + 0.3)
@@ -1364,14 +1332,14 @@ class Beat6_Waermerueckgewinnung(Scene):
         )
         lx_r, lx_l = x_far + 0.15, -x_far - 0.15
         labels = VGroup(
-            math_label(r"\text{Abluft}\; 20\,°\mathrm{C}", np.array([lx_r, y_top - 0.07, 0]), size=LABEL_FONT_SIZE,
+            math_label(r"\text{Abluft } 20\,°\mathrm{C}", np.array([lx_r, y_top - 0.07, 0]), size=LABEL_FONT_SIZE,
                        color=P_ORANGE, edge="left"),
-            math_label(r"\text{Außenluft}\; 0\,°\mathrm{C}", np.array([lx_l, y_bot - 0.07, 0]), size=LABEL_FONT_SIZE,
+            math_label(r"\text{Außenluft } 0\,°\mathrm{C}", np.array([lx_l, y_bot - 0.07, 0]), size=LABEL_FONT_SIZE,
                        color=P_BLUE, edge="right"),
         )
-        zu_read = math_readout(lambda: rf"\text{{Zuluft}}\; {de_num(D_THETA * eta.get_value())}\,°\mathrm{{C}}",
+        zu_read = math_readout(lambda: rf"\text{{Zuluft }} {de_num(D_THETA * eta.get_value())}\,°\mathrm{{C}}",
                                np.array([lx_r, y_bot - 0.07, 0]), size=LABEL_FONT_SIZE, color=P_GREEN)
-        fort_read = math_readout(lambda: rf"\text{{Fortluft}}\; {de_num(D_THETA * (1 - eta.get_value()))}\,°\mathrm{{C}}",
+        fort_read = math_readout(lambda: rf"\text{{Fortluft }} {de_num(D_THETA * (1 - eta.get_value()))}\,°\mathrm{{C}}",
                                  np.array([lx_l, y_top - 0.07, 0]), size=LABEL_FONT_SIZE, color=GREY_A, edge="right")
         bx, blen, yb1, yb2 = -2.3, 4.6, -0.3, -1.0
         bar1 = Rectangle(width=blen, height=0.42, color=P_RED, stroke_width=1.2).set_fill(P_RED, 0.6)
@@ -1429,39 +1397,35 @@ class Beat6_Waermerueckgewinnung(Scene):
         phi_snap.move_to(phi_read.get_left() + RIGHT * phi_snap.width / 2)
         self.remove(eta_read, phi_read)
         self.add(eta_snap, phi_snap)
-        self.play(*[FadeOut(m) for m in (hx, plates, hx_lbl, ducts, labels, zu_read, fort_read)], run_time=0.8)
+        self.play(*[FadeOut(m) for m in (hx, plates, hx_lbl, ducts, labels, zu_read, fort_read, bar1, bar1_lbl,
+                                         bar1_val, bar2, saved_lbl, rest_lbl)], run_time=0.8)
 
-        def card(lines, color, x):
-            body = VGroup(*lines).arrange(DOWN, buff=0.12)
-            frame = RoundedRectangle(width=4.6, height=body.height + 0.4, corner_radius=0.1, color=color, stroke_width=1.8)
-            frame.set_fill(P_DEEP_DARK, 0.82).set_z_index(-1)
-            return VGroup(frame, body).move_to([x, 1.2, 0])
-
-        card_eta = card([
-            math_label(r"\eta_{\mathrm{WRG}}", size=FORMULA_FONT_SIZE, color=P_GREEN),
+        card_eta = VGroup(
+            math_label(r"\eta_{\mathrm{WRG}}", size=BODY_FONT_SIZE, color=P_GREEN),
             Text("Wärmerückgewinnungsgrad", color=P_WHITE, font_size=LABEL_FONT_SIZE),
-            math_label(r"\text{typisch}\; 0{,}70 \ldots 0{,}90", size=LABEL_FONT_SIZE, color=GREY_A),
+            math_label(r"\text{typisch } 0{,}70 \ldots 0{,}90", size=LABEL_FONT_SIZE, color=GREY_A),
             Text("DIN EN 13141-7 / DIN 1946-6", color=P_CYAN, font_size=LABEL_FONT_SIZE),
-        ], P_GREEN, -2.6)
-        card_phi = card([
-            math_label(r"\Phi_{\mathrm{V}}", size=FORMULA_FONT_SIZE, color=P_RED),
+        ).arrange(DOWN, buff=0.1)
+        card_phi = VGroup(
+            math_label(r"\Phi_{\mathrm{V}}", size=BODY_FONT_SIZE, color=P_RED),
             Text("Reduzierte Lüftungsheizlast", color=P_WHITE, font_size=LABEL_FONT_SIZE),
             math_label(rf"{de_num(PHI_V)} \cdot (1 - {de_num(ETA_WRG, 1)}) \approx {de_num(PHI_V * (1 - ETA_WRG))}\,\mathrm{{W}}",
                        size=LABEL_FONT_SIZE, color=GREY_A),
             Text("DIN EN 12831-1", color=P_CYAN, font_size=LABEL_FONT_SIZE),
-        ], P_RED, 2.6)
+        ).arrange(DOWN, buff=0.1)
+        VGroup(card_eta, card_phi).arrange(RIGHT, buff=1.2).move_to(UP * 0.55)
 
         caption = swap_caption(self, caption, subtitle_text(N, "eta"))
         ring_eta2 = highlight_param(items, "eta", color=P_GREEN)
-        self.play(Create(ring_eta2), FadeIn(card_eta[0]), TransformFromCopy(eta_snap, card_eta[1][0]),
-                  FadeIn(card_eta[1][1:], shift=UP * 0.15), run_time=1.0)
+        self.play(Create(ring_eta2), ReplacementTransform(eta_snap, card_eta[0]), FadeIn(card_eta[1:], shift=UP * 0.15),
+                  run_time=1.0)
         hold_for(self, N, "eta")
         self.play(FadeOut(ring_eta2), run_time=0.2)
 
         caption = swap_caption(self, caption, subtitle_text(N, "phi"))
         ring_phi = highlight_param(items, "phi", color=P_RED)
-        self.play(Create(ring_phi), FadeIn(card_phi[0]), TransformFromCopy(phi_snap, card_phi[1][0]),
-                  FadeIn(card_phi[1][1:], shift=UP * 0.15), run_time=1.0)
+        self.play(Create(ring_phi), ReplacementTransform(phi_snap, card_phi[0]), FadeIn(card_phi[1:], shift=UP * 0.15),
+                  run_time=1.0)
         hold_for(self, N, "phi")
         self.play(FadeOut(ring_phi), run_time=0.2)
         #endregion
@@ -1472,14 +1436,8 @@ class Beat6_Waermerueckgewinnung(Scene):
 
 
 #region Beat7 – Purge ventilation versus tilted window
-ROOM_A, ROOM_H, ROOM_D = 4.0 * 5.0, 2.5, 5.0
-T_STOSS, T_KIPP = 5.0, 60.0
-P_RAD, RAD_SHARE = 500.0, 0.5
-M_LAIBUNG, C_MASONRY, DT_LAIBUNG = 160.0, 0.84, 5.0
-
-
 class Beat7_KippOderStoss(Scene):
-    """⏱️ Same 50 m³ of fresh air: wide-open window in 5 min versus tilted window in 60 min — and what each costs."""
+    """🪟 Same 50 m³ of fresh air: wide-open window in 5 min versus tilted window in 60 min — and what each costs."""
 
     NARRATION = [
         ("room",
@@ -1511,13 +1469,18 @@ class Beat7_KippOderStoss(Scene):
          "Darum: kurz und weit öffnen statt kippen."),
     ]
 
+    ROOM_A, ROOM_H, ROOM_D = 4.0 * 5.0, 2.5, 5.0
+    T_STOSS, T_KIPP = 5.0, 60.0
+    P_RAD, RAD_SHARE = 500.0, 0.5
+    M_LAIBUNG, C_MASONRY, DT_LAIBUNG = 160.0, 0.84, 5.0
+
     def construct(self):
         apply_scene_style(self)
         N = self.NARRATION
-        vol = ROOM_A * ROOM_H
+        vol = self.ROOM_A * self.ROOM_H
         e_air = C_LUFT * vol * D_THETA
-        e_rad = P_RAD * (T_KIPP / 60.0) * RAD_SHARE
-        e_lb = M_LAIBUNG * C_MASONRY * DT_LAIBUNG / 3.6
+        e_rad = self.P_RAD * (self.T_KIPP / 60.0) * self.RAD_SHARE
+        e_lb = self.M_LAIBUNG * self.C_MASONRY * self.DT_LAIBUNG / 3.6
         e_kipp = e_air + e_rad + e_lb
 
         title = scene_title(TITLE_DE)
@@ -1529,28 +1492,28 @@ class Beat7_KippOderStoss(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         #region two rooms
-        k, fy = 0.85, -0.45
-        rs = _vent_room(-5.9, fy, k, r"\text{Stoßlüften}", P_CYAN)
-        rk = _vent_room(1.3, fy, k, r"\text{Kipplüftung}", P_ORANGE)
-        note = math_label(rf"V = 4\,\mathrm{{m}} \cdot {de_num(ROOM_D)}\,\mathrm{{m}} \cdot {de_num(ROOM_H, 1)}\,\mathrm{{m}} = "
-                          rf"{de_num(vol)}\,\mathrm{{m^{{3}}}} \quad\quad \Delta\theta = {de_num(D_THETA)}\,\mathrm{{K}}",
-                          size=LABEL_FONT_SIZE, color=P_WHITE).move_to([-0.3, 2.45, 0])
+        k, fy = 0.72, -0.2
+        rs = _vent_room(-5.7, fy, k, r"\text{Stoßlüften}", P_CYAN)
+        rk = _vent_room(1.6, fy, k, r"\text{Kipplüftung}", P_ORANGE)
+        note = math_label(rf"V = 4\,\mathrm{{m}} \cdot {de_num(self.ROOM_D)}\,\mathrm{{m}} \cdot {de_num(self.ROOM_H, 1)}\,\mathrm{{m}} = "
+                          rf"{de_num(vol)}\,\mathrm{{m^{{3}}}} \qquad \Delta\theta = {de_num(D_THETA)}\,\mathrm{{K}}",
+                          size=LABEL_FONT_SIZE, color=P_WHITE).move_to([0, 2.3, 0])
         t_s, t_k = ValueTracker(0.0), ValueTracker(0.0)
         valve_s, valve_k = ValueTracker(0.6), ValueTracker(0.6)
         cool = ValueTracker(0.0)
         clocks = {}
         for room, tr, col in ((rs, t_s, P_CYAN), (rk, t_k, P_ORANGE)):
-            clocks[id(room)] = _clock([room["ox"] + 0.55, room["ceil"] - 0.5, 0], 0.32, tr, color=col)
+            clocks[id(room)] = _clock([room["ox"] + 0.5, 1.0, 0], 0.3, tr, color=col)
         reads = VGroup(*[
             math_readout(lambda tr=tr: rf"t = {de_num(tr.get_value())}\,\mathrm{{min}}",
-                         np.array([room["ox"] + 0.55, room["ceil"] - 1.12, 0]), size=LABEL_FONT_SIZE, color=col, edge="center")
+                         np.array([room["ox"] + 0.5, 0.45, 0]), size=LABEL_FONT_SIZE, color=col, edge="center")
             for room, tr, col in ((rs, t_s, P_CYAN), (rk, t_k, P_ORANGE))
         ])
-        frac_s = lambda: min(1.0, t_s.get_value() / T_STOSS)
-        frac_k = lambda: min(1.0, t_k.get_value() / T_KIPP)
-        gauges = VGroup(*[_vbar(r["ox"] - 0.5, fy, r["ceil"] - fy, f, color=P_CYAN) for r, f in ((rs, frac_s), (rk, frac_k))])
+        frac_s = lambda: min(1.0, t_s.get_value() / self.T_STOSS)
+        frac_k = lambda: min(1.0, t_k.get_value() / self.T_KIPP)
+        gauges = VGroup(_vbar(rs["ox"] - 0.5, fy, 1.8, frac_s, color=P_CYAN), _vbar(rk["ox"] - 0.5, fy, 1.8, frac_k, color=P_CYAN))
         pct = VGroup(*[
-            math_readout(lambda f=f: rf"{de_num(100 * f())}\,\%", np.array([room["ox"] - 0.5, room["ceil"] + 0.24, 0]),
+            math_readout(lambda f=f: rf"{de_num(100 * f())}\,\%", np.array([room["ox"] - 0.5, fy - 0.35, 0]),
                          size=LABEL_FONT_SIZE, color=P_CYAN, edge="center")
             for room, f in ((rs, frac_s), (rk, frac_k))
         ])
@@ -1575,12 +1538,12 @@ class Beat7_KippOderStoss(Scene):
         #region first five minutes
         caption = swap_caption(self, caption, subtitle_text(N, "five"))
         unit, bx = 8.0 / 780.0, -4.3
-        yr_s, yr_k = -1.2, -1.88
+        yr_s, yr_k = -0.98, -1.72
         row_s = _energy_row(bx, yr_s, unit, [(lambda: e_air * frac_s(), P_CYAN)])
         row_k = _energy_row(bx, yr_k, unit, [
             (lambda: e_air * frac_k(), P_CYAN),
-            (lambda: P_RAD * RAD_SHARE * t_k.get_value() / 60.0, P_RED),
-            (lambda: M_LAIBUNG * C_MASONRY * DT_LAIBUNG * cool.get_value() / 3.6, P_YELLOW),
+            (lambda: self.P_RAD * self.RAD_SHARE * t_k.get_value() / 60.0, P_RED),
+            (lambda: self.M_LAIBUNG * self.C_MASONRY * self.DT_LAIBUNG * cool.get_value() / 3.6, P_YELLOW),
         ])
         row_labels = VGroup(
             Text("Stoßlüften", font_size=LABEL_FONT_SIZE, color=P_CYAN),
@@ -1590,8 +1553,8 @@ class Beat7_KippOderStoss(Scene):
             lbl.move_to([bx - 0.18 - lbl.width / 2, y, 0])
 
         def total_k():
-            return e_air * frac_k() + P_RAD * RAD_SHARE * t_k.get_value() / 60.0 + \
-                M_LAIBUNG * C_MASONRY * DT_LAIBUNG * cool.get_value() / 3.6
+            return e_air * frac_k() + self.P_RAD * self.RAD_SHARE * t_k.get_value() / 60.0 + \
+                self.M_LAIBUNG * self.C_MASONRY * self.DT_LAIBUNG * cool.get_value() / 3.6
 
         tot_s = math_readout(lambda: rf"{de_num(e_air * frac_s())}\,\mathrm{{Wh}}",
                              lambda: np.array([bx + e_air * frac_s() * unit + 0.15, yr_s - 0.08, 0]),
@@ -1624,15 +1587,15 @@ class Beat7_KippOderStoss(Scene):
                                  ext(rk, 0.8, gap_y + 0.38)])]
         animate_flows(self, [(stoss_paths_out + kipp_out, P_ORANGE), (stoss_paths_in + kipp_in, P_BLUE)],
                       run_time=4.0, waves=5, cycles=2.0, extra=[
-                          t_s.animate.set_value(T_STOSS), t_k.animate.set_value(T_STOSS),
-                          valve_k.animate.set_value(0.75), cool.animate.set_value(T_STOSS / T_KIPP),
+                          t_s.animate.set_value(self.T_STOSS), t_k.animate.set_value(self.T_STOSS),
+                          valve_k.animate.set_value(0.75), cool.animate.set_value(self.T_STOSS / self.T_KIPP),
                       ])
         hold_for(self, N, "five")
         #endregion
 
         #region purge done
         caption = swap_caption(self, caption, subtitle_text(N, "stoss"))
-        air_s_lbl = math_label(rf"\text{{Luft}}\; {de_num(e_air)}\,\mathrm{{Wh}}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+        air_s_lbl = math_label(rf"\text{{Luft }} {de_num(e_air)}\,\mathrm{{Wh}}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
         air_s_lbl.move_to([bx + e_air * unit / 2, yr_s, 0])
         self.play(rs["sash"].animate.shift(RIGHT * 0.32).set_opacity(1.0).set_fill(P_CYAN, opacity=0.25),
                   valve_s.animate.set_value(0.6), rs["rad"].animate.set_fill(P_RED, opacity=0.55).set_stroke(P_RED),
@@ -1647,31 +1610,31 @@ class Beat7_KippOderStoss(Scene):
             return interpolate_color(ManimColor(P_ORANGE), ManimColor(P_BLUE), float(cool.get_value()))
 
         rk["sturz"].add_updater(lambda m: m.set_fill(laibung_color(), opacity=0.85))
-        rk["laibung"].add_updater(lambda m: m.set_fill(laibung_color(), opacity=0.3))
+        rk["laibung"].add_updater(lambda m: m.set_fill(laibung_color(), opacity=0.4))
         rk["rad"].add_updater(lambda m: m.set_fill(P_RED, opacity=0.35 + 0.5 * valve_k.get_value()))
         animate_flows(self, [(kipp_out, P_ORANGE), (kipp_in, P_BLUE), (heat_out, P_RED)],
                       run_time=6.0, waves=5, cycles=5.0, extra=[
-                          t_k.animate.set_value(T_KIPP), valve_k.animate.set_value(1.0), cool.animate.set_value(1.0),
+                          t_k.animate.set_value(self.T_KIPP), valve_k.animate.set_value(1.0), cool.animate.set_value(1.0),
                       ])
         hold_for(self, N, "hour")
         #endregion
 
         #region thermostat and reveal
         caption = swap_caption(self, caption, subtitle_text(N, "thermostat"))
-        rad_lbl = math_label(rf"\dot{{Q}} = {de_num(P_RAD)}\,\mathrm{{W}} \cdot {de_num(100 * RAD_SHARE)}\,\%",
-                             np.array([rk["ox"] + 0.15, fy + 0.2, 0]), size=LABEL_FONT_SIZE, color=P_RED, edge="left")
-        seg_rad = math_label(rf"\text{{Heizkörper}}\; {de_num(e_rad)}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+        rad_lbl = math_label(rf"\dot{{Q}} = {de_num(self.P_RAD)}\,\mathrm{{W}} \cdot {de_num(100 * self.RAD_SHARE)}\,\%",
+                             np.array([rk["x_out"] + 0.2, fy + 0.25, 0]), size=LABEL_FONT_SIZE, color=P_RED, edge="left")
+        seg_rad = math_label(rf"\text{{Heizkörper }} {de_num(e_rad)}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
         seg_rad.move_to([bx + (e_air + e_rad / 2) * unit, yr_k, 0])
-        seg_air = math_label(rf"\text{{Luft}}\; {de_num(e_air)}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+        seg_air = math_label(rf"\text{{Luft }} {de_num(e_air)}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
         seg_air.move_to([bx + e_air * unit / 2, yr_k, 0])
         self.play(Indicate(rk["valve"], color=P_YELLOW, scale_factor=1.8), FadeIn(rad_lbl), FadeIn(seg_air),
                   FadeIn(seg_rad), run_time=1.0)
         hold_for(self, N, "thermostat")
 
         caption = swap_caption(self, caption, subtitle_text(N, "laibung"))
-        lb_lbl = math_label(rf"\Delta T = {de_num(DT_LAIBUNG)}\,\mathrm{{K}}", np.array([rk["x_out"] + 0.2, rk["sill"] + 0.05, 0]),
+        lb_lbl = math_label(rf"\Delta T = {de_num(self.DT_LAIBUNG)}\,\mathrm{{K}}", np.array([rk["x_out"] + 0.2, rk["ceil"] - 0.05, 0]),
                             size=LABEL_FONT_SIZE, color=P_BLUE, edge="left")
-        seg_lb = math_label(rf"\text{{Laibung}}\; {de_num(round(e_lb, -1))}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+        seg_lb = math_label(rf"\text{{Laibung }} {de_num(round(e_lb, -1))}", size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
         seg_lb.move_to([bx + (e_air + e_rad + e_lb / 2) * unit, yr_k, 0])
         self.play(Indicate(VGroup(rk["sturz"], rk["laibung"]), color=P_BLUE, scale_factor=1.05), FadeIn(lb_lbl),
                   FadeIn(seg_lb), run_time=1.0)
@@ -1765,8 +1728,8 @@ class Beat8_Lueftungssysteme(Scene):
             width=col_w, height=col_h, corner_radius=0.15,
             color=P_RED, fill_color="#1a1215", fill_opacity=0.85,
         ).move_to(pos1)
-        t1_main = Text("Fensterlüftung", font_size=LABEL_FONT_SIZE, color=P_RED)
-        t1_sub = Text("Freie Lüftung ohne WRG", font_size=LABEL_FONT_SIZE, color=GREY_A)
+        t1_main = Text("1. FENSTERLÜFTUNG", font_size=LABEL_FONT_SIZE, color=P_RED)
+        t1_sub = Text("Freie Lüftung (Ohne WRG)", font_size=LABEL_FONT_SIZE, color=GREY_A)
         hdr1 = VGroup(t1_main, t1_sub).arrange(DOWN, buff=0.05).move_to(card1.get_top() + DOWN * 0.45)
 
         cube1 = create_cube_graphic(pos1 + DOWN * 0.1)
@@ -1787,12 +1750,12 @@ class Beat8_Lueftungssysteme(Scene):
         # arrow's start it was crossed by the curve as it swept up to the
         # top-right corner, and its right end was clipped by the card border.
         lbl_out1 = Paragraph(
-            "Warmluft", "(+21 °C)",
+            "Warmluft (+21°C)", "entweicht!",
             font_size=LABEL_FONT_SIZE, color=P_ORANGE, alignment="center",
         ).scale(0.75)
         lbl_out1.move_to(pos1 + LEFT * 0.75 + UP * 1.0)
-        stat1_wrg = math_label(r"\eta_{\mathrm{WRG}} = 0\,\%", size=LABEL_FONT_SIZE, color=P_RED)
-        stat1_loss = Text("Lüftungsverlust 100 %", font_size=LABEL_FONT_SIZE, color=P_RED)
+        stat1_wrg = Text("WRG: 0%", font_size=LABEL_FONT_SIZE, color=P_RED)
+        stat1_loss = Text("Lüftungsverlust: 100% (Sehr Hoch)", font_size=LABEL_FONT_SIZE, color=P_RED)
         box1_stat = VGroup(stat1_wrg, stat1_loss).arrange(DOWN, buff=0.04).move_to(card1.get_bottom() + UP * 0.4)
         col1 = VGroup(card1, hdr1, cube1, arr_in1, lbl_in1, arr_out1, lbl_out1, box1_stat)
 
@@ -1801,7 +1764,7 @@ class Beat8_Lueftungssysteme(Scene):
             width=col_w, height=col_h, corner_radius=0.15,
             color=P_BLUE, fill_color="#101825", fill_opacity=0.85,
         ).move_to(pos2)
-        t2_main = Text("Zentrale WRG", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        t2_main = Text("2. ZENTRALE WRG", font_size=LABEL_FONT_SIZE, color=P_BLUE)
         t2_sub = Text("Zentrales Lüftungsgerät", font_size=LABEL_FONT_SIZE, color=GREY_A)
         hdr2 = VGroup(t2_main, t2_sub).arrange(DOWN, buff=0.05).move_to(card2.get_top() + DOWN * 0.45)
 
@@ -1829,8 +1792,8 @@ class Beat8_Lueftungssysteme(Scene):
         # nudged up, it clears the cube below and stays inside card2.
         lbl_supply = Text("Vorgewärmte\nZuluft (+18°C)", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         lbl_supply.scale(0.7).next_to(arr_supply, RIGHT, buff=0.12).shift(UP * 0.06)
-        stat2_wrg = math_label(r"\eta_{\mathrm{WRG}} = 85 \ldots 95\,\%", size=LABEL_FONT_SIZE, color=P_GREEN)
-        stat2_loss = Text("Lüftungsverlust ≈ 10 %", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        stat2_wrg = Text("WRG: 85 – 95%", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        stat2_loss = Text("Lüftungsverlust: ~10% (Gering)", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         box2_stat = VGroup(stat2_wrg, stat2_loss).arrange(DOWN, buff=0.04).move_to(card2.get_bottom() + UP * 0.4)
         col2 = VGroup(
             card2, hdr2, cube2, mvhr_box, lbl_mvhr,
@@ -1842,7 +1805,7 @@ class Beat8_Lueftungssysteme(Scene):
             width=col_w, height=col_h, corner_radius=0.15,
             color=P_GREEN, fill_color="#102018", fill_opacity=0.85,
         ).move_to(pos3)
-        t3_main = Text("Dezentrale WRG", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        t3_main = Text("3. DEZENTRALE WRG", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         t3_sub = Text("Pendellüfter mit Keramik", font_size=LABEL_FONT_SIZE, color=GREY_A)
         hdr3 = VGroup(t3_main, t3_sub).arrange(DOWN, buff=0.05).move_to(card3.get_top() + DOWN * 0.45)
 
@@ -1890,8 +1853,8 @@ class Beat8_Lueftungssysteme(Scene):
         lbl_cyc2 = Text("70s Zuluft\n(+17°C)", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         lbl_cyc2.scale(0.65).next_to(arr_cyc2, DOWN, buff=0.02).shift(RIGHT * 0.35)
 
-        stat3_wrg = math_label(r"\eta_{\mathrm{WRG}} = 70 \ldots 90\,\%", size=LABEL_FONT_SIZE, color=P_GREEN)
-        stat3_loss = Text("Lüftungsverlust ≈ 15 … 30 %", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        stat3_wrg = Text("WRG: 70 – 90%", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        stat3_loss = Text("Lüftungsverlust: ~15 – 30%", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         box3_stat = VGroup(stat3_wrg, stat3_loss).arrange(DOWN, buff=0.04).move_to(card3.get_bottom() + UP * 0.4)
         col3 = VGroup(
             card3, hdr3, cube3, window3, unit_face,

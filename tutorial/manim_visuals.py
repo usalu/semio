@@ -129,6 +129,14 @@ def solar_wave_ray(start, end, *, color: str = P_YELLOW, stroke_width: float = 2
     ray = VMobject(color=color, stroke_width=stroke_width, stroke_opacity=0.9)
     ray.set_points_smoothly(pts)
     return ray
+
+
+def radiation_ray(start, end, *, color: str = P_YELLOW, stroke_width: float = 2.4):
+    """📏 Straight radiation ray with round caps — clean, parallel lines instead of a wave."""
+    from manim import CapStyleType, Line
+
+    return Line(np.array(start, dtype=float), np.array(end, dtype=float), color=color,
+                stroke_width=stroke_width, stroke_opacity=0.9).set_cap_style(CapStyleType.ROUND)
 #endregion
 
 

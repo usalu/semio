@@ -1,4 +1,4 @@
-"""Render, mux, and compose Heating Module 2 (Wärmeleitung) into a single video."""
+"""Render, mux, and compose Heating Module 2 (Transmission) into a single video."""
 
 import sys
 import subprocess
@@ -21,7 +21,9 @@ def main():
         ("Beat1_MakroUndMikro", base_dir / "beat_1_audio.mp3"),
         ("Beat2_RWert", base_dir / "beat_2_audio.mp3"),
         ("Beat3_UWertUndGradient", base_dir / "beat_3_audio.mp3"),
-        ("Beat4_Gebaeudehuelle", base_dir / "beat_4_audio.mp3"),
+        ("Beat4_WattVergleich", base_dir / "beat_4_audio.mp3"),
+        ("Beat5_Gebaeudehuelle", base_dir / "beat_5_audio.mp3"),
+        ("Beat6_Waermebruecken", base_dir / "beat_6_audio.mp3"),
     ]
 
     def resolve_audio(path: Path) -> Path:

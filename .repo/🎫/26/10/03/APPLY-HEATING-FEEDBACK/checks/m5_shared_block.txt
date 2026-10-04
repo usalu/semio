@@ -1,0 +1,71 @@
+#region Shared
+def _is_drawn(m):
+    """True if the mobject currently contributes visible fill or stroke."""
+    fo = m.get_fill_opacity() if hasattr(m, "get_fill_opacity") else 0
+    so = m.get_stroke_opacity() if hasattr(m, "get_stroke_opacity") else 0
+    sw = m.get_stroke_width() if hasattr(m, "get_stroke_width") else 0
+    return fo > 0.02 or (so > 0.02 and sw > 0.4)
+
+
+def _fit_stage(mob, *, below, focus=None, scale_max=None, shrink_floor=None):
+    """↘️ Fill the free band under the beat subtitle.
+
+    ``focus`` (optional) is the dense diagram core used for sizing — sparse
+    arrows/labels are left out of the probe so the house/window actually grows.
+    Fully hidden children are ignored so later-reveal pieces do not crush size.
+    ``scale_max`` / ``shrink_floor`` override module defaults for dense beats.
+    """
+    from manim import Arrow, DashedLine, Text, VGroup
+
+    top = min(below.get_bottom()[1] - CONTENT_GAP_BELOW_TITLE, CONTENT_TOP_MAX)
+    avail_h = max(top - CONTENT_BOTTOM_MIN, 0.5)
+    if focus is not None:
+        probe_src = focus
+    else:
+        probe_src = VGroup(*[
+            m for m in mob.family_members_with_points()
+            if _is_drawn(m) and not isinstance(m, (Text, Arrow, DashedLine))
+        ])
+        if len(probe_src) == 0:
+            probe_src = VGroup(*[m for m in mob.family_members_with_points() if _is_drawn(m)])
+    probe = probe_src if len(probe_src) > 0 else mob
+    max_s = CONTENT_SCALE_MAX if scale_max is None else scale_max
+    min_s = CONTENT_SHRINK_FLOOR if shrink_floor is None else shrink_floor
+    scale = min(
+        avail_h / max(probe.height, 1e-6),
+        CONTENT_MAX_WIDTH / max(probe.width, 1e-6),
+        max_s,
+    )
+    if scale < min_s:
+        scale = min_s
+    mob.scale(scale)
+    # Re-measure after scale; park using focus/geometry, not label outliers.
+    if focus is not None:
+        anchor = focus
+    else:
+        anchor = VGroup(*[
+            m for m in mob.family_members_with_points()
+            if _is_drawn(m) and not isinstance(m, (Text, Arrow, DashedLine))
+        ]) or mob
+    mob.shift(DOWN * (anchor.get_top()[1] - top))
+    if anchor.get_bottom()[1] < CONTENT_BOTTOM_MIN:
+        mob.shift(UP * (CONTENT_BOTTOM_MIN - anchor.get_bottom()[1]))
+    return mob
+
+
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in the other Heating
+    modules. Module 5's solar-gain chain — Φ_solar = G · A · F_f · g · F_sh —
+    is the DIN V 18599-2 method; the thermal-mass beats cite DIN EN ISO 13786.
+    Added in absolute frame coordinates, so ``_fit_stage`` never scales it, and
+    skipped on the g-value beat, which already prints its norm in the diagram.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+

@@ -1,0 +1,374 @@
+"""🔥 Heating Module 3 — Lüftung (ventilation heat loss).
+
+One example house runs through every beat: its section gives the gross volume
+V_e and, after the construction is subtracted, the net air volume V; that V,
+the air change rate n, the volumetric heat capacity c_Luft and Δθ build
+Φ_V = V · n · c_Luft · Δθ (DIN EN 12831-1). Formulas and units are typeset with
+the shared ``math_*`` helpers, every shown quantity counts up from 0 and every
+partial value is computed from the drawn geometry.
+"""
+
+import numpy as np
+from manim import *
+
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+
+from manim_fonts import (
+    apply_scene_style, scene_title, play_scene_title,
+    beat_subtitle, BEAT_SUBTITLE_FADE, body_text,
+    SUBTITLE_FONT_SIZE, BODY_FONT_SIZE, LABEL_FONT_SIZE, FORMULA_FONT_SIZE,
+)
+from manim_visuals import (
+    P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
+    highlight_param, math_label, math_readout, math_panel, de_num,
+    smooth_path, flow_guides, animate_flows, dim_arrow,
+    caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language,
+)
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
+
+# 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
+TITLE_DE = "Modul 3: Lüftung"
+
+
+#region Beat helpers
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in
+    ``1_introduction/scene_1.py`` and ``2_conduction/scene_2.py`` so every module
+    footnotes its norm identically. Module 3 is the ventilation-loss chain of
+    DIN EN 12831-1 (Φ_V = V · n · c_Luft · Δθ); the systems beat cites DIN 1946-6.
+    Beats whose diagram already prints the standard in full get no corner chip.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
+#region Geometry helpers
+def _shoelace(points) -> float:
+    """📐 Area of a simple polygon from its corners.
+
+    https://en.wikipedia.org/wiki/Shoelace_formula
+    """
+    if len(points) < 3:
+        return 0.0
+    p = np.array([np.array(q, dtype=float)[:2] for q in points])
+    x, y = p[:, 0], p[:, 1]
+    return 0.5 * abs(float(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))))
+
+
+def _clip_below(points, y_cut: float) -> list:
+    """✂️ Part of a polygon below the line ``y = y_cut``.
+
+    https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
+    """
+    pts = [np.array(p, dtype=float)[:2] for p in points]
+    out = []
+    for a, b in zip(pts, pts[1:] + pts[:1]):
+        a_in, b_in = a[1] <= y_cut, b[1] <= y_cut
+        if a_in:
+            out.append(a)
+        if a_in != b_in:
+            out.append(a + (y_cut - a[1]) / (b[1] - a[1]) * (b - a))
+    return out
+
+
+def _level_for(polys, frac: float) -> float:
+    """🌊 Height of the fill line below which ``frac`` of the polygons' area lies (bisection)."""
+    ys = [float(np.array(p, dtype=float)[1]) for poly in polys for p in poly]
+    lo, hi = min(ys), max(ys)
+    total = sum(_shoelace(p) for p in polys)
+    for _ in range(40):
+        mid = 0.5 * (lo + hi)
+        if sum(_shoelace(_clip_below(p, mid)) for p in polys) < frac * total:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def _to_scene(points, origin, scale: float) -> list:
+    """🗺️ Metre coordinates of a drawing → scene points."""
+    o = np.array(origin, dtype=float)
+    return [o + scale * np.array([float(p[0]), float(p[1]), 0.0]) for p in points]
+
+
+def _poly(points, origin, scale: float, **style):
+    """🔷 Polygon from metre coordinates; an empty mobject while it has no area yet."""
+    if len(points) < 3:
+        return VMobject()
+    return Polygon(*_to_scene(points, origin, scale), **style)
+
+
+def _house_section(wall: float = 0.35, slab: float = 0.30, decke: float = 0.22, roof: float = 0.30):
+    """🏠 The example house in section — outer outline, construction pieces and the two air rooms, in metres.
+
+    Footprint 10 m × 8 m, eaves 6 m, ridge 8,5 m, Geschossdecke at 3 m. The roof
+    thickness is measured perpendicular to the pitch, so the inner roof line drops
+    by ``roof · √(1 + slope²)``. Gross and net volume both follow from the polygons.
+    https://www.din.de/de/mitwirken/normenausschuesse/nabau/veroeffentlichungen/wdc-beuth:din21:288236370
+    """
+    w, depth, eave, ridge, floor2 = 10.0, 8.0, 6.0, 8.5, 3.0
+    slope = (ridge - eave) / (w / 2)
+    drop = roof * np.sqrt(1 + slope ** 2)
+
+    def roof_in(x: float) -> float:
+        return eave + slope * min(x, w - x) - drop
+
+    outer = [(0, 0), (w, 0), (w, eave), (w / 2, ridge), (0, eave)]
+    eg = [(wall, slab), (w - wall, slab), (w - wall, floor2), (wall, floor2)]
+    og = [(wall, floor2 + decke), (w - wall, floor2 + decke), (w - wall, roof_in(w - wall)),
+          (w / 2, ridge - drop), (wall, roof_in(wall))]
+    pieces = {
+        "slab": [(0, 0), (w, 0), (w, slab), (0, slab)],
+        "decke": [(wall, floor2), (w - wall, floor2), (w - wall, floor2 + decke), (wall, floor2 + decke)],
+        "wall_l": [(0, slab), (wall, slab), (wall, roof_in(wall)), (0, eave - drop)],
+        "wall_r": [(w - wall, slab), (w, slab), (w, eave - drop), (w - wall, roof_in(w - wall))],
+        "roof_l": [(0, eave), (w / 2, ridge), (w / 2, ridge - drop), (0, eave - drop)],
+        "roof_r": [(w / 2, ridge), (w, eave), (w, eave - drop), (w / 2, ridge - drop)],
+    }
+    a_e = _shoelace(outer)
+    a_net = _shoelace(eg) + _shoelace(og)
+    d_i = depth - 2 * wall
+    return {
+        "w": w, "depth": depth, "eave": eave, "ridge": ridge, "wall": wall, "slab": slab,
+        "outer": outer, "rooms": [eg, og], "pieces": pieces,
+        "A_e": a_e, "V_e": a_e * depth, "A": a_net, "d_i": d_i, "V": a_net * d_i,
+        "top_in": ridge - drop,
+    }
+#endregion
+
+
+#region Shared numbers
+RHO_AIR, CP_AIR = 1.2, 1005.0
+C_LUFT = round(RHO_AIR * CP_AIR / 3600.0, 2)
+N_RATE, D_THETA = 0.5, 20.0
+HOUSE = _house_section()
+V_NET = round(HOUSE["V"], -1)
+PHI_V = V_NET * N_RATE * C_LUFT * D_THETA
+ETA_WRG = 0.8
+#endregion
+
+
+#region Instrument glyphs
+def _clock(center, r: float, minutes, *, color=P_CYAN):
+    """🕐 Wall clock whose minute hand follows ``minutes`` (a ``ValueTracker``) — one turn is one hour."""
+    c = np.array(center, dtype=float)
+    face = Circle(radius=r, color=P_WHITE, stroke_width=2.5).set_fill(P_DEEP_DARK, opacity=0.9).move_to(c)
+    ticks = VGroup(*[
+        Line(c + (r - 0.07) * np.array([np.sin(a), np.cos(a), 0.0]), c + r * np.array([np.sin(a), np.cos(a), 0.0]),
+             color=P_WHITE, stroke_width=1.6)
+        for a in np.linspace(0, TAU, 12, endpoint=False)
+    ])
+
+    def hand():
+        mid, rad = face.get_center(), face.width / 2
+        a = TAU * minutes.get_value() / 60.0
+        return Line(mid, mid + 0.8 * rad * np.array([np.sin(a), np.cos(a), 0.0]), color=color, stroke_width=3)
+
+    hand_mob = always_redraw(hand)
+    pin = always_redraw(lambda: Dot(face.get_center(), radius=0.035, color=color))
+    return {"face": face, "group": VGroup(face, ticks, hand_mob, pin), "static": VGroup(face, ticks)}
+
+
+def _vbar(x: float, y0: float, height: float, frac, *, width: float = 0.26, color=P_CYAN):
+    """📊 Vertical fill gauge from ``y0`` upward; ``frac()`` returns 0…1 every frame."""
+    track = Rectangle(width=width, height=height, color=P_WHITE, stroke_width=2)
+    track.set_fill(P_DEEP_DARK, opacity=1.0).move_to([x, y0 + height / 2, 0])
+
+    def fill():
+        h = max(0.004, float(np.clip(frac(), 0, 1)) * (height - 0.06))
+        return Rectangle(width=width - 0.06, height=h, stroke_width=0, fill_color=color,
+                         fill_opacity=0.85).move_to([x, y0 + 0.03 + h / 2, 0])
+
+    return VGroup(track, always_redraw(fill))
+#endregion
+
+
+#region Air change scale
+def _n_scale(x: float, y_lo: float, y_hi: float, *, lo: float = 0.1, hi: float = 30.0, zero_drop: float = 0.45):
+    """📶 Vertical log scale of the air change rate n in 1/h with a broken-off "≈ 0" end below 0,1."""
+    span = np.log10(hi) - np.log10(lo)
+
+    def y_of(value: float) -> float:
+        if value <= 0:
+            return y_lo - zero_drop
+        return y_lo + (np.log10(value) - np.log10(lo)) / span * (y_hi - y_lo)
+
+    axis = Line([x, y_lo, 0], [x, y_hi, 0], color=P_TEAL, stroke_width=3)
+    stub = Line([x, y_lo - zero_drop, 0], [x, y_lo - 0.55 * zero_drop, 0], color=P_TEAL, stroke_width=3)
+    gap = y_lo - 0.36 * zero_drop
+    brk = VGroup(*[Line([x - 0.11, gap + dy - 0.05, 0], [x + 0.11, gap + dy + 0.05, 0], color=P_TEAL, stroke_width=2)
+                   for dy in (-0.05, 0.05)])
+    ticks, labels = VGroup(), VGroup()
+    values = [d * 10.0 ** e for e in (-1, 0, 1) for d in range(1, 10)] + [20.0, 30.0]
+    for v in sorted(set(v for v in values if lo <= v <= hi)):
+        y = y_of(v)
+        major = v in (0.1, 1.0, 10.0)
+        ticks.add(Line([x - (0.17 if major else 0.08), y, 0], [x, y, 0], color=P_WHITE,
+                       stroke_width=2.0 if major else 1.1))
+        if major:
+            labels.add(math_label(de_num(v, 1 if v < 1 else 0), np.array([x - 0.26, y - 0.07, 0]),
+                                  size=LABEL_FONT_SIZE, edge="right"))
+    ticks.add(Line([x - 0.17, y_of(0), 0], [x, y_of(0), 0], color=P_WHITE, stroke_width=2.0))
+    labels.add(math_label("0", np.array([x - 0.26, y_of(0) - 0.07, 0]), size=LABEL_FONT_SIZE, edge="right"))
+    title = math_label(r"n\;[\mathrm{h^{-1}}]", np.array([x + 0.1, y_hi + 0.22, 0]), size=LABEL_FONT_SIZE,
+                       color=P_TEAL, edge="right")
+    return {"y_of": y_of, "x": x, "group": VGroup(axis, stub, brk, ticks, labels, title)}
+
+
+def _scale_marks(scale, entries, *, x_text: float, gap: float = 0.08, bottom: float = -1.72, top: float = 2.32):
+    """🏷️ Markers on the n scale with labels dodged apart so neighbouring uses stay readable."""
+    x = scale["x"]
+    dots, labels, leaders, ys = [], [], [], []
+    for value, src, color in entries:
+        y = scale["y_of"](value)
+        dots.append(Dot([x, y, 0], radius=0.075, color=color))
+        labels.append(math_label(src, size=LABEL_FONT_SIZE, color=color))
+        ys.append(y)
+    placed = list(ys)
+    order = sorted(range(len(placed)), key=lambda i: -placed[i])
+    for a, b in zip(order, order[1:]):
+        placed[b] = min(placed[b], placed[a] - (labels[a].height + labels[b].height) / 2 - gap)
+    under = bottom - (placed[order[-1]] - labels[order[-1]].height / 2)
+    if under > 0:
+        placed = [p + under for p in placed]
+    over = placed[order[0]] + labels[order[0]].height / 2 - top
+    if over > 0:
+        placed = [p - over for p in placed]
+    for i, label in enumerate(labels):
+        label.move_to([x_text + label.width / 2, placed[i], 0])
+        leaders.append(Line([x + 0.09, ys[i], 0], [x_text - 0.08, placed[i], 0], color=entries[i][2],
+                            stroke_width=1.3, stroke_opacity=0.6))
+    return dots, labels, leaders
+
+
+def _use_glyph(kind: str, color):
+    """🏢 Small room sketch for one use — storage, passive house, office, classroom, kitchen, operating room."""
+    frame = Rectangle(width=1.6, height=1.1, color=color, stroke_width=2.6)
+    parts = VGroup(frame)
+    fy = -0.55
+    if kind == "lager":
+        for cx, cy in ((-0.38, fy + 0.2), (0.04, fy + 0.2), (-0.17, fy + 0.6)):
+            box = Square(0.38, color=GREY_B, stroke_width=2).move_to([cx, cy, 0])
+            parts.add(box, Line(box.get_corner(DL), box.get_corner(UR), color=GREY_B, stroke_width=1.4),
+                      Line(box.get_corner(UL), box.get_corner(DR), color=GREY_B, stroke_width=1.4))
+    elif kind == "passiv":
+        unit = Rectangle(width=0.5, height=0.26, color=P_GREEN, stroke_width=2).move_to([0, 0.28, 0])
+        parts.add(unit, Line(unit.get_left(), [-0.78, 0.28, 0], color=P_BLUE, stroke_width=2.4),
+                  Line(unit.get_right(), [0.78, 0.28, 0], color=P_ORANGE, stroke_width=2.4),
+                  Arrow([0, 0.15, 0], [0, -0.35, 0], buff=0, color=P_GREEN, stroke_width=2.4,
+                        max_tip_length_to_length_ratio=0.3),
+                  Line([-0.6, fy + 0.02, 0], [0.6, fy + 0.02, 0], color=GREY_B, stroke_width=2))
+    elif kind == "buero":
+        parts.add(Line([-0.62, -0.12, 0], [0.22, -0.12, 0], color=GREY_B, stroke_width=3),
+                  Line([-0.55, -0.12, 0], [-0.55, fy, 0], color=GREY_B, stroke_width=2),
+                  Line([0.15, -0.12, 0], [0.15, fy, 0], color=GREY_B, stroke_width=2),
+                  Rectangle(width=0.42, height=0.28, color=P_CYAN, stroke_width=2).move_to([-0.22, 0.1, 0]),
+                  Circle(radius=0.1, color=color, stroke_width=2).move_to([0.45, 0.12, 0]),
+                  Line([0.45, 0.02, 0], [0.45, -0.32, 0], color=color, stroke_width=2.4))
+    elif kind == "klasse":
+        parts.add(Rectangle(width=1.0, height=0.34, color=P_GREEN, stroke_width=2).set_fill("#163a2a", 0.9)
+                  .move_to([0, 0.28, 0]))
+        for cx in (-0.48, 0.0, 0.48):
+            parts.add(Circle(radius=0.08, color=color, stroke_width=2).move_to([cx, -0.12, 0]),
+                      Line([cx - 0.17, -0.3, 0], [cx + 0.17, -0.3, 0], color=GREY_B, stroke_width=2.4))
+    elif kind == "kueche":
+        stove = Rectangle(width=0.9, height=0.34, color=GREY_B, stroke_width=2).move_to([0, fy + 0.17, 0])
+        pot = Rectangle(width=0.32, height=0.2, color=P_WHITE, stroke_width=2).next_to(stove, UP, buff=0)
+        hood = Polygon([-0.42, 0.5, 0], [0.42, 0.5, 0], [0.28, 0.3, 0], [-0.28, 0.3, 0], color=GREY_B, stroke_width=2)
+        steam = VGroup(*[ParametricFunction(lambda t, x0=x0: np.array([x0 + 0.04 * np.sin(14 * t), t, 0]),
+                                            t_range=[-0.05, 0.26], color=P_ORANGE, stroke_width=1.8)
+                         for x0 in (-0.08, 0.08)])
+        parts.add(stove, pot, hood, steam)
+    elif kind == "op":
+        parts.add(Line([-0.45, -0.2, 0], [0.45, -0.2, 0], color=P_WHITE, stroke_width=4),
+                  Line([0, -0.2, 0], [0, fy, 0], color=GREY_B, stroke_width=3),
+                  Arc(radius=0.2, start_angle=PI, angle=PI, color=P_YELLOW, stroke_width=2.4).move_to([0, 0.3, 0]),
+                  *[Arrow([xx, 0.52, 0], [xx, 0.0, 0], buff=0, color=P_CYAN, stroke_width=1.6,
+                          max_tip_length_to_length_ratio=0.18, stroke_opacity=0.7) for xx in (-0.6, -0.4, 0.4, 0.6)])
+    return parts
+#endregion
+
+
+#region Ventilation room section
+def _vent_room(ox: float, floor_y: float, k: float, title: str, color):
+    """🪟 Room section with exterior wall, window opening, radiator, thermostat and the reveal (Laibung).
+
+    ``ox`` is the inner face of the back wall, ``k`` scene units per metre. The
+    room is 4 m wide and 2,5 m high; the window sits 0,9 m … 2,2 m above the floor
+    in a 0,35 m exterior wall with the radiator below it.
+    """
+    w, h, t = 4.0 * k, 2.5 * k, 0.35 * k
+    x_in, x_out = ox + w, ox + w + t
+    sill, lintel, ceil = floor_y + 0.9 * k, floor_y + 2.2 * k, floor_y + h
+    grey = "#5A6577"
+    floor = Rectangle(width=w + t + 0.12, height=0.14, stroke_width=0, fill_color=grey, fill_opacity=1.0)
+    floor.move_to([ox - 0.06 + (w + t + 0.12) / 2, floor_y - 0.07, 0])
+    ceiling = floor.copy().move_to([floor.get_center()[0], ceil + 0.07, 0])
+    back = Rectangle(width=0.12, height=h, stroke_width=0, fill_color=grey, fill_opacity=1.0)
+    back.move_to([ox - 0.06, floor_y + h / 2, 0])
+    brust = Rectangle(width=t, height=sill - floor_y, stroke_width=0, fill_color=grey, fill_opacity=1.0)
+    brust.move_to([(x_in + x_out) / 2, (floor_y + sill) / 2, 0])
+    sturz = Rectangle(width=t, height=ceil - lintel, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.85)
+    sturz.move_to([(x_in + x_out) / 2, (lintel + ceil) / 2, 0])
+    laibung = Rectangle(width=t, height=lintel - sill, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.32)
+    laibung.move_to([(x_in + x_out) / 2, (sill + lintel) / 2, 0])
+    sash = Rectangle(width=0.06, height=lintel - sill - 0.08, color=P_CYAN, stroke_width=2)
+    sash.set_fill(P_CYAN, opacity=0.25).move_to([(x_in + x_out) / 2, (sill + lintel - 0.08) / 2, 0])
+    rad = Rectangle(width=0.8, height=0.48, color=P_RED, stroke_width=2).set_fill(P_RED, opacity=0.55)
+    rad.move_to([x_in - 0.16 - 0.4, floor_y + 0.12 + 0.24, 0])
+    ribs = VGroup(*[Line([xx, rad.get_bottom()[1] + 0.05, 0], [xx, rad.get_top()[1] - 0.05, 0],
+                         color=P_WHITE, stroke_width=1, stroke_opacity=0.5)
+                    for xx in np.linspace(rad.get_left()[0] + 0.12, rad.get_right()[0] - 0.12, 5)])
+    valve = Circle(radius=0.065, color=P_WHITE, stroke_width=2).set_fill(P_DEEP_DARK, 1.0)
+    valve.move_to([x_in - 0.08, rad.get_top()[1] - 0.06, 0])
+    head = math_label(title, size=BODY_FONT_SIZE, color=color)
+    head.move_to([ox + w / 2, ceil + 0.42, 0])
+    return {
+        "x_in": x_in, "x_out": x_out, "sill": sill, "lintel": lintel, "ceil": ceil, "floor": floor_y,
+        "ox": ox, "w": w, "k": k, "rad": rad, "ribs": ribs, "valve": valve, "sash": sash,
+        "sturz": sturz, "laibung": laibung, "head": head,
+        "shell": VGroup(floor, ceiling, back, brust, sturz, laibung),
+        "group": VGroup(floor, ceiling, back, brust, sturz, laibung, sash, rad, ribs, valve),
+    }
+
+
+def _valve_dial(room, opening):
+    """🌡️ Thermostat dial mark — turns with ``opening()`` from closed (0) to fully open (1)."""
+    def mark():
+        c = room["valve"].get_center()
+        a = PI / 2 - 0.9 * PI * float(np.clip(opening(), 0, 1))
+        return Line(c, c + 0.06 * np.array([np.cos(a), np.sin(a), 0]), color=P_YELLOW, stroke_width=2)
+    return always_redraw(mark)
+#endregion
+
+
+#region Energy bar rows
+def _energy_row(x0: float, y: float, unit: float, parts, *, height: float = 0.5):
+    """📊 Horizontal stacked bar redrawn every frame from ``(value_fn, colour)`` parts in Wh."""
+    def build():
+        row, cursor = VGroup(), x0
+        for fn, colour in parts:
+            w = max(0.0, float(fn())) * unit
+            if w > 0.004:
+                row.add(Rectangle(width=w, height=height, stroke_width=1.2, color=colour, fill_color=colour,
+                                  fill_opacity=0.72).move_to([cursor + w / 2, y, 0]))
+            cursor += w
+        return row
+    return always_redraw(build)
+#endregion

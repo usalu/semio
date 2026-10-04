@@ -1,0 +1,285 @@
+#region The through-line: one exterior wall between a heated room and a winter night
+# Conduction, convection and radiation are three ways the *same* heat leaves the
+# same room. Beats 1–5 redraw this one section — radiator and occupant in the
+# room, a plastered brick wall, a snowy night outside — and only change the
+# mechanism drawn on it. Coordinates are design units; ``_stage(scale=…)``
+# shrinks the whole section about ``STAGE_PIVOT`` when a beat needs the
+# formula band, and ``stage["p"]`` / ``stage["fit"]`` map later drawings onto it.
+THETA_I, THETA_E = 20, 0
+FLOOR_Y, CEIL_Y = -1.25, 1.75
+SLAB = 0.22
+ROOM_X0, WALL_X0, WALL_X1, OUT_X1 = -6.3, -0.7, 0.7, 6.3
+PLASTER = 0.10
+LABEL_Y = -1.70
+STAGE_PIVOT = np.array([0.0, 2.0, 0.0])
+RADIATOR = (-5.65, -1.05, -4.75, -0.30)
+OCCUPANT_X = -2.9
+BRICK_RED = "#8E4A38"
+MORTAR = "#C9B8A6"
+NIGHT = "#1B2A4A"
+SLAB_GREY = "#5B6068"
+HOT = "#FF8A50"
+
+
+def _box(x0, y0, x1, y1, **style):
+    """▭ Axis-aligned polygon from two design corners."""
+    return Polygon(
+        np.array([x0, y0, 0.0]), np.array([x1, y0, 0.0]),
+        np.array([x1, y1, 0.0]), np.array([x0, y1, 0.0]), **style,
+    )
+
+
+def _brick_wall():
+    """🧱 Plastered masonry: brick courses with offset joints between two render coats."""
+    bx0, bx1 = WALL_X0 + PLASTER, WALL_X1 - PLASTER
+    y0, y1 = FLOOR_Y - SLAB, CEIL_Y + SLAB
+    core = _box(bx0, y0, bx1, y1, stroke_width=0, fill_color=BRICK_RED, fill_opacity=1.0)
+    joints = VGroup()
+    course, brick = 0.26, 0.62
+    rows = int(np.ceil((y1 - y0) / course))
+    for i in range(1, rows):
+        y = y0 + i * course
+        joints.add(Line(np.array([bx0, y, 0.0]), np.array([bx1, y, 0.0]), color=MORTAR, stroke_width=1.3))
+    for i in range(rows):
+        ya, yb = y0 + i * course, min(y1, y0 + (i + 1) * course)
+        x = bx0 + (brick / 2 if i % 2 else 0.0) + brick
+        while x < bx1 - 0.05:
+            joints.add(Line(np.array([x, ya, 0.0]), np.array([x, yb, 0.0]), color=MORTAR, stroke_width=1.3))
+            x += brick
+    inner = _box(WALL_X0, y0, bx0, y1, stroke_width=0, fill_color="#E8E2D6", fill_opacity=0.95)
+    outer = _box(bx1, y0, WALL_X1, y1, stroke_width=0, fill_color="#B9C2CC", fill_opacity=0.95)
+    outline = _box(WALL_X0, y0, WALL_X1, y1, stroke_color=P_WHITE, stroke_width=2.4, fill_opacity=0.0)
+    tint = VGroup(*[
+        _box(bx0 + k * (bx1 - bx0) / 16, y0, bx0 + (k + 1) * (bx1 - bx0) / 16, y1,
+             stroke_width=0, fill_color=interpolate_color(ManimColor(HOT), ManimColor(P_BLUE), (k + 0.5) / 16),
+             fill_opacity=0.0)
+        for k in range(16)
+    ])
+    return {"core": core, "joints": joints, "inner": inner, "outer": outer, "outline": outline,
+            "tint": tint, "group": VGroup(core, tint, joints, inner, outer, outline)}
+
+
+def _radiator():
+    """♨️ Panel radiator on the floor, fins and feet."""
+    x0, y0, x1, y1 = RADIATOR
+    body = _box(x0, y0, x1, y1, stroke_color=P_RED, stroke_width=2.2, fill_color=P_RED, fill_opacity=0.30)
+    fins = VGroup(*[
+        Line(np.array([x, y0 + 0.06, 0.0]), np.array([x, y1 - 0.06, 0.0]), color=P_RED, stroke_width=1.4)
+        for x in np.arange(x0 + 0.13, x1 - 0.05, 0.13)
+    ])
+    feet = VGroup(*[
+        Line(np.array([x, y0, 0.0]), np.array([x, FLOOR_Y, 0.0]), color=P_RED, stroke_width=2.2)
+        for x in (x0 + 0.12, x1 - 0.12)
+    ])
+    return VGroup(body, fins, feet)
+
+
+def _occupant(x=OCCUPANT_X, color=P_ORANGE):
+    """🧍 Standing occupant — scale reference for the room."""
+    head = Circle(radius=0.17, color=color, stroke_width=2.4).move_to(np.array([x, 0.60, 0.0]))
+    body = RoundedRectangle(width=0.42, height=0.88, corner_radius=0.14, color=color,
+                            stroke_width=2.4).move_to(np.array([x, -0.03, 0.0]))
+    legs = VGroup(*[
+        Line(np.array([x + dx, -0.47, 0.0]), np.array([x + dx * 1.3, FLOOR_Y, 0.0]), color=color, stroke_width=2.4)
+        for dx in (-0.10, 0.10)
+    ])
+    return VGroup(head, body, legs)
+
+
+def _night_sky():
+    """🌙 Crescent moon and a few stars over the snow."""
+    moon = VGroup(
+        Circle(radius=0.28, stroke_width=0, fill_color="#F2E8C9", fill_opacity=1.0).move_to(np.array([5.25, 1.35, 0.0])),
+        Circle(radius=0.25, stroke_width=0, fill_color=NIGHT, fill_opacity=1.0).move_to(np.array([5.37, 1.45, 0.0])),
+    )
+    stars = VGroup(*[
+        Dot(np.array([x, y, 0.0]), radius=0.025, color=P_WHITE, fill_opacity=0.8)
+        for x, y in ((2.1, 1.6), (3.0, 1.2), (3.9, 1.7), (4.5, 0.9), (5.9, 0.7), (2.6, 0.4), (4.9, 0.2), (6.0, 1.6))
+    ])
+    return VGroup(moon, stars)
+
+
+def _stage(*, scale: float = 1.0):
+    """🏠 Heated room | brick exterior wall | winter night — the section Beats 1–5 share."""
+    room = _box(ROOM_X0, FLOOR_Y, WALL_X0, CEIL_Y, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.16)
+    night = _box(WALL_X1, FLOOR_Y, OUT_X1, CEIL_Y + SLAB, stroke_width=0, fill_color=NIGHT, fill_opacity=0.85)
+    floor = _box(ROOM_X0, FLOOR_Y - SLAB, WALL_X0, FLOOR_Y, stroke_color="#8A8F98", stroke_width=1.4,
+                 fill_color=SLAB_GREY, fill_opacity=0.9)
+    ceiling = _box(ROOM_X0, CEIL_Y, WALL_X0, CEIL_Y + SLAB, stroke_color="#8A8F98", stroke_width=1.4,
+                   fill_color=SLAB_GREY, fill_opacity=0.9)
+    snow = _box(WALL_X1, FLOOR_Y - SLAB, OUT_X1, FLOOR_Y, stroke_width=0, fill_color="#DCE6F2", fill_opacity=0.85)
+    wall = _brick_wall()
+    radiator = _radiator()
+    occupant = _occupant()
+    sky = _night_sky()
+
+    ti = Text(f"innen {THETA_I} °C", font_size=BODY_FONT_SIZE, color=P_ORANGE)
+    ti.move_to(np.array([(ROOM_X0 + WALL_X0) / 2, LABEL_Y, 0.0]))
+    te = Text(f"außen {THETA_E} °C", font_size=BODY_FONT_SIZE, color=P_BLUE)
+    te.move_to(np.array([(WALL_X1 + OUT_X1) / 2, LABEL_Y, 0.0]))
+    dth = place_math(_dtheta_label(THETA_I - THETA_E), np.array([0.0, ti.get_bottom()[1], 0.0]), "center")
+
+    shell = VGroup(room, night, floor, ceiling, snow)
+    group = VGroup(shell, wall["group"], radiator, occupant, sky, ti, te, dth)
+    group.scale(scale, about_point=STAGE_PIVOT)
+
+    def p(x, y):
+        return STAGE_PIVOT + scale * np.array([x, y - STAGE_PIVOT[1], 0.0])
+
+    def fit(mob):
+        return mob.scale(scale, about_point=STAGE_PIVOT)
+
+    return {
+        "room": room, "night": night, "shell": shell, "wall": wall, "radiator": radiator,
+        "occupant": occupant, "sky": sky, "ti": ti, "te": te, "dth": dth,
+        "furniture": VGroup(radiator, occupant, sky),
+        "group": group, "p": p, "fit": fit, "s": scale,
+    }
+
+
+def _show_stage(scene, stage, *, labels=True, run_time: float = 1.4):
+    """🎬 Draw the section in a fixed order: spaces, slabs and wall, then furniture and labels."""
+    scene.play(FadeIn(stage["shell"]), FadeIn(stage["wall"]["group"]), run_time=run_time)
+    extra = [FadeIn(stage["ti"]), FadeIn(stage["te"])] if labels else []
+    scene.play(FadeIn(stage["furniture"]), *extra, run_time=0.8)
+    return run_time + 0.8
+#endregion
+
+
+#region Particles with a colour along the path
+def _path(points):
+    """〰️ Smooth track through design points."""
+    path = TipableVMobject()
+    path.set_points_smoothly([np.array([x, y, 0.0]) for x, y in points])
+    return path
+
+
+def _knots_color(knots):
+    """🎨 Piecewise colour over ``t`` in [0, 1] from ``(t, colour)`` knots."""
+    ts = [k[0] for k in knots]
+    cs = [ManimColor(k[1]) for k in knots]
+
+    def color(t):
+        i = int(np.clip(np.searchsorted(ts, t) - 1, 0, len(ts) - 2))
+        u = float(np.clip((t - ts[i]) / max(1e-6, ts[i + 1] - ts[i]), 0.0, 1.0))
+        return interpolate_color(cs[i], cs[i + 1], u)
+
+    return color
+
+
+def _chord_t(points, index):
+    """📏 Arc-length fraction of ``points[index]`` along the polyline — knots for ``_knots_color``."""
+    pts = np.array(points, dtype=float)
+    seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+    return float(np.sum(seg[:index]) / np.sum(seg))
+
+
+def _stream(scene, streams, *, run_time: float, n: int = 10, radius: float = 0.06, cycles: float = 2.0, extra=None):
+    """💨 Streak particles along paths, coloured by ``color_fn(t)``; ``closed`` loops never fade at the seam."""
+    parts, meta = VGroup(), []
+    for path, color_fn, closed in streams:
+        for w in range(n):
+            dot = Ellipse(width=radius * 2.8, height=radius * 1.15, stroke_width=0, fill_opacity=0.0)
+            dot.move_to(path.point_from_proportion(0.0))
+            parts.add(dot)
+            meta.append((path, color_fn, closed, w / n))
+
+    def update(group, alpha):
+        for dot, (path, color_fn, closed, offset) in zip(group, meta):
+            t = (alpha * cycles + offset) % 1.0
+            pos = path.point_from_proportion(t)
+            ahead = path.point_from_proportion(min(1.0, t + 0.01) if not closed else (t + 0.01) % 1.0)
+            dot.move_to(pos)
+            dot.set_angle(float(np.arctan2(ahead[1] - pos[1], ahead[0] - pos[0])))
+            fade = 1.0 if closed else min(1.0, t / 0.08, (1.0 - t) / 0.10)
+            dot.set_fill(color_fn(t), opacity=0.92 * max(0.0, fade))
+
+    scene.add(parts)
+    scene.play(UpdateFromAlphaFunc(parts, update), *(extra or []), run_time=run_time, rate_func=linear)
+    scene.remove(parts)
+#endregion
+
+
+#region Mechanism drawings on the section
+def _loop_points():
+    """🔁 Room air loop: rise at the radiator, ceiling run, sink at the cold wall, return on the floor."""
+    return [(-5.2, -0.25), (-5.2, 0.55), (-4.95, 1.27), (-4.3, 1.50), (-2.5, 1.52), (-1.45, 1.47),
+            (-1.02, 1.12), (-0.96, 0.40), (-0.96, -0.45), (-1.08, -0.92), (-1.65, -1.08), (-3.5, -1.08),
+            (-4.6, -1.06), (-5.02, -0.92), (-5.2, -0.60), (-5.2, -0.25)]
+
+
+def _loop(stage):
+    """🌀 Closed room-air loop and its temperature colouring (warm ➜ cooled at the wall ➜ rewarmed)."""
+    pts = _loop_points()
+    path = stage["fit"](_path(pts))
+    color = _knots_color([
+        (0.0, HOT), (_chord_t(pts, 5), P_ORANGE), (_chord_t(pts, 9), P_BLUE),
+        (_chord_t(pts, 13), P_BLUE), (1.0, HOT),
+    ])
+    return path, color
+
+
+def _wind(stage):
+    """🌬️ Wind lanes: in from the right, up along the facade, away into the night."""
+    lanes = []
+    for k, off in enumerate((0.0, 0.24, 0.48)):
+        pts = [(6.1, -0.95 + 0.35 * k), (3.0, -0.95 + 0.35 * k), (1.5 + off, -0.65 + 0.25 * k),
+               (0.98 + off, 0.05), (0.98 + off, 0.85), (1.6 + off, 1.45), (2.7 + off, 1.80)]
+        lanes.append(stage["fit"](_path(pts)))
+    color = _knots_color([(0.0, P_BLUE), (0.45, P_BLUE), (0.75, "#C9A3E8"), (1.0, "#C9A3E8")])
+    return lanes, color
+
+
+def _surface_arrows(stage, x0, x1, ys, color):
+    """➡️ Short heat hand-over arrows into or out of a wall surface."""
+    p = stage["p"]
+    return VGroup(*[
+        Arrow(p(x0, y), p(x1, y), buff=0, color=color, stroke_width=3,
+              max_tip_length_to_length_ratio=0.45, tip_length=0.12)
+        for y in ys
+    ])
+
+
+def _ir_rays(stage, pairs, *, amp: float = 0.06):
+    """〰️ Infrared rays between surfaces — wavy, so they read as radiation, not as air."""
+    p = stage["p"]
+    return VGroup(*[
+        solar_wave_ray(p(*a), p(*b), color=P_YELLOW, stroke_width=2.2, amp=amp * stage["s"],
+                       cycles=max(2.0, float(np.linalg.norm(np.subtract(b, a))) * 2.2))
+        for a, b in pairs
+    ])
+
+
+def _ray_pulses(rays, *, width: float = 6.0):
+    """✨ One travelling flash per ray — the packet moving from emitter to absorber."""
+    return [ShowPassingFlash(r.copy().set_stroke(color=P_YELLOW, width=width), time_width=0.35) for r in rays]
+
+
+INNER_RAYS = [((-4.75, -0.45), (-0.72, -0.55)), ((-4.75, -0.65), (-0.72, 0.15)),
+              ((-4.85, -0.32), (-0.72, 0.85)), ((-4.95, -0.30), (-0.72, 1.45))]
+OUTER_RAYS = [((0.72, 0.15), (2.4, 1.85)), ((0.72, 0.75), (3.4, 1.85)), ((0.72, 1.35), (4.3, 1.85))]
+#endregion
+
+
+#region Wall temperature
+def _tint_wall(stage, opacity: float = 0.55):
+    """🌡️ Animation that colours the masonry warm inside ➜ cold outside — the gradient conduction runs down."""
+    return stage["wall"]["tint"].animate.set_fill(opacity=opacity)
+#endregion
+
+
+def _route_strip(active: int | None = None):
+    """🧭 Leitung · Konvektion · Strahlung — which of the three a beat is on."""
+    names = ("Leitung", "Konvektion", "Strahlung")
+    colors = (P_RED, P_CYAN, P_YELLOW)
+    strip = VGroup(*[
+        chip(n, c if active == i else P_TEAL, font_size=LABEL_FONT_SIZE)
+        for i, (n, c) in enumerate(zip(names, colors))
+    ]).arrange(RIGHT, buff=0.5)
+    strip.move_to(np.array([0.0, -2.16, 0.0]))
+    if active is not None:
+        for i, boxed in enumerate(strip):
+            if i != active:
+                boxed[0].set_stroke(opacity=0.35)
+                boxed[1].set_fill(opacity=0.35)
+    return strip

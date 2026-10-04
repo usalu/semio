@@ -923,33 +923,50 @@ class Beat5_Gebaeudehuelle(Scene):
                             stroke_width=1.5, stroke_opacity=0.5)
         house = {"Dach": roof, "Außenwand": walls, "Fenster": windows, "Haustür": door, "Boden": floor_line}
 
-        phi_max = max(a * u * dt for _n, a, u, dt, _c in ENVELOPE)
+        def roof_paths(n: int):
+            segs = []
+            for a, b in ((tl, roof_peak), (roof_peak, tr)):
+                u = (b - a) / np.linalg.norm(b - a)
+                nrm = np.array([-u[1], u[0], 0.0])
+                if nrm[1] < 0:
+                    nrm = -nrm
+                for f in np.linspace(0.25, 0.75, max(1, n // 2)):
+                    p = a + (b - a) * f
+                    segs.append((p - nrm * 0.35, p + nrm * 0.6))
+            return segs
 
-        def loss_arrow(start, direction, phi: float, color):
-            width = 2.5 + 9.0 * phi / phi_max
-            start = np.array(start, dtype=float)
-            return Arrow(start, start + np.array(direction, dtype=float) * 0.6, buff=0, color=color, stroke_width=width,
-                         max_stroke_width_to_length_ratio=40, max_tip_length_to_length_ratio=0.45,
-                         tip_length=0.12 + 0.012 * width)
+        def pick_points(points, n: int):
+            idx = np.linspace(0, len(points) - 1, n).round().astype(int) if n > 1 else [len(points) // 2]
+            segs = []
+            for i in idx:
+                x_wall, y = points[i]
+                outward = -1.0 if x_wall < hc[0] else 1.0
+                segs.append(((x_wall - outward * 0.35, y, 0.0), (x_wall + outward * 0.65, y, 0.0)))
+            return segs
 
-        def roof_normal(a, b):
-            u = (b - a) / np.linalg.norm(b - a)
-            nrm = np.array([-u[1], u[0], 0.0])
-            return nrm if nrm[1] > 0 else -nrm
+        def n_of(phi: float) -> int:
+            return max(1, int(round(phi / 90.0)))
 
-        y_wall_lo, y_wall_hi = (bl[1] + win_lo) / 2, (win_hi + tl[1]) / 2
-        y_win = (win_lo + win_hi) / 2
-        anchors = {
-            "Dach": [((tl + roof_peak) / 2, roof_normal(tl, roof_peak)), ((roof_peak + tr) / 2, roof_normal(roof_peak, tr))],
-            "Außenwand": [((bl[0], y_wall_hi, 0.0), LEFT), ((br[0], y_wall_hi, 0.0), RIGHT), ((bl[0], y_wall_lo, 0.0), LEFT)],
-            "Fenster": [((bl[0] - 0.07, y_win, 0.0), LEFT), ((br[0] + 0.07, y_win, 0.0), RIGHT)],
-            "Haustür": [((br[0] + 0.07, (bl[1] + door_hi) / 2, 0.0), RIGHT)],
-            "Boden": [((hc[0], bl[1], 0.0), DOWN)],
-        }
-        loss_arrows = {
-            name: VGroup(*[loss_arrow(p, d, a * u * dt / len(anchors[name]), color) for p, d in anchors[name]])
-            for name, a, u, dt, color in ENVELOPE
-        }
+        wall_points = [(bl[0], y) for y in np.linspace(bl[1] + 0.1, win_lo - 0.06, 6)] + \
+                      [(bl[0], y) for y in np.linspace(win_hi + 0.06, tl[1] - 0.1, 5)] + \
+                      [(br[0], y) for y in np.linspace(door_hi + 0.06, win_lo - 0.06, 3)] + \
+                      [(br[0], y) for y in np.linspace(win_hi + 0.06, tr[1] - 0.1, 5)]
+        window_points = [(x, y) for x in (bl[0], br[0]) for y in np.linspace(win_lo + 0.06, win_hi - 0.06, 4)]
+        door_points = [(br[0], y) for y in np.linspace(bl[1] + 0.12, door_hi - 0.12, 3)]
+        flow_tracks = {}
+        for name, a, u, dt, _c in ENVELOPE:
+            n = n_of(a * u * dt)
+            if name == "Dach":
+                segs = roof_paths(n)
+            elif name == "Außenwand":
+                segs = pick_points(wall_points, n)
+            elif name == "Fenster":
+                segs = pick_points(window_points, n)
+            elif name == "Haustür":
+                segs = pick_points(door_points, n)
+            else:
+                segs = [((x, bl[1] + 0.35, 0.0), (x, bl[1] - 0.6, 0.0)) for x in np.linspace(bl[0] + 0.5, br[0] - 0.5, n)]
+            flow_tracks[name] = _flow_lines(segs)
 
         self.play(Create(floor_line), Create(walls), Create(roof), FadeIn(storey), run_time=1.4)
         self.play(Create(windows), Create(door), run_time=0.8)
@@ -965,6 +982,8 @@ class Beat5_Gebaeudehuelle(Scene):
         row, box, items = panel
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
         self.play(FadeIn(row), Create(box), run_time=1.0)
+        animate_flows(self, [(flow_tracks[name], color, P_BLUE) for name, _a, _u, _t, color in ENVELOPE],
+                      run_time=2.6, waves=3, cycles=1.4)
         hold_for(self, N, "formula")
         #endregion
 
@@ -1011,8 +1030,8 @@ class Beat5_Gebaeudehuelle(Scene):
             label, reads = rows[i]
             self.play(FadeIn(label), house[name].animate.set_stroke(width=6.5), run_time=0.3)
             self.add(reads, bars[i])
-            self.play(LaggedStart(*[GrowArrow(arr) for arr in loss_arrows[name]], lag_ratio=0.15),
-                      fracs[i].animate.set_value(1.0), run_time=run_time)
+            animate_flows(self, [(flow_tracks[name], color, P_BLUE)], run_time=run_time, waves=3, cycles=1.2,
+                          extra=[fracs[i].animate.set_value(1.0)])
             self.play(house[name].animate.set_stroke(width=3.5 if name in ("Dach", "Außenwand", "Boden") else 2.5), run_time=0.2)
 
         caption = swap_caption(self, caption, subtitle_text(N, "paths"))
@@ -1052,10 +1071,10 @@ class Beat5_Gebaeudehuelle(Scene):
         stack_lbl = math_label(r"\Phi_{\mathrm{T}}", np.array([stack_x, cursor + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW)
         self.play(Create(sum_rule), FadeIn(sum_label), FadeIn(sum_a), run_time=0.5)
         self.add(sum_phi)
-        self.play(*[ShowPassingFlash(arr.copy().set_color(P_WHITE), time_width=0.5)
-                    for group in loss_arrows.values() for arr in group],
-                  LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
-                  total.animate.set_value(PHI_T), run_time=2.6)
+        animate_flows(self, [(flow_tracks[name], color, P_BLUE) for name, _a, _u, _t, color in ENVELOPE],
+                      run_time=2.6, waves=3, cycles=1.4,
+                      extra=[LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
+                             total.animate.set_value(PHI_T)])
         sum_phi.clear_updaters()
         self.play(FadeIn(stack_lbl), Indicate(sum_phi, color=P_YELLOW), run_time=0.6)
         hold_for(self, N, "outro")

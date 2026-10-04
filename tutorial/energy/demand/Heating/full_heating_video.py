@@ -82,7 +82,9 @@ HEATING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
             _m2.Beat1_MakroUndMikro,
             _m2.Beat2_RWert,
             _m2.Beat3_UWertUndGradient,
-            _m2.Beat4_Gebaeudehuelle,
+            _m2.Beat4_WattVergleich,
+            _m2.Beat5_Gebaeudehuelle,
+            _m2.Beat6_Waermebruecken,
         ],
     ),
     (
@@ -94,7 +96,8 @@ HEATING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
             _m3.Beat4_SpezWaermekapazitaet,
             _m3.Beat5_Lueftungsverlust,
             _m3.Beat6_Waermerueckgewinnung,
-            _m3.Beat7_Lueftungssysteme,
+            _m3.Beat7_KippOderStoss,
+            _m3.Beat8_Lueftungssysteme,
         ],
     ),
     (
@@ -128,6 +131,7 @@ HEATING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
             _final.ReviewingHeatGains,
             _final.Scene4,
             _final.UltimateEnergyBalance,
+            _final.AnlagenVerluste,
         ],
     ),
 ]

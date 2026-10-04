@@ -3,13 +3,37 @@
   "title": "Apply Heating Review Feedback",
   "slug": "APPLY-HEATING-FEEDBACK",
   "emoji": "🔥",
-  "status": "open",
+  "status": "closed",
   "description": "Apply the supervisor review of the Heating video: animated transmission and air change, U·A per m², watt comparison of wall standards, thermal bridges, net vs gross volume, tilt vs purge ventilation, correct winter sun patch, shading factor 1→0, utilisation factor, system losses, factors counted from 0, typeset formulas, plainer text. Everything not named in the feedback stays unchanged.",
   "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
   "dates": {
     "due": "2026-10-03",
-    "started": "2026-10-03"
+    "started": "2026-10-03",
+    "completed": "2026-10-03"
   },
   "client": "claude-code",
-  "llm": "opus-4-7"
+  "llm": "opus-4-7",
+  "summary": "Applied the supervisor's Heating feedback on top of the existing beats: typeset formulas, values counted from 0 and derived from the drawings, animated transmission, U per m², wall watt comparison, thermal bridges, net vs gross volume, air-change scale, tilt vs purge ventilation, correct winter sun patch, shading factor 1→0, utilisation-factor chart and a new system-losses scene.",
+  "files": {
+    "created": [
+      ".repo/🎫/26/10/03/APPLY-HEATING-FEEDBACK/spec.md",
+      ".repo/🎫/26/10/03/APPLY-HEATING-FEEDBACK/notes.md",
+      ".repo/🎫/26/10/03/APPLY-HEATING-FEEDBACK/checks/"
+    ],
+    "updated": [
+      "tutorial/manim_visuals.py",
+      "tutorial/energy/demand/Heating/1_introduction/scene_1.py",
+      "tutorial/energy/demand/Heating/2_conduction/scene_2.py",
+      "tutorial/energy/demand/Heating/2_conduction/generate_audio.py",
+      "tutorial/energy/demand/Heating/2_conduction/build_full_video.py",
+      "tutorial/energy/demand/Heating/3_convection/scene_3.py",
+      "tutorial/energy/demand/Heating/3_convection/generate_audio.py",
+      "tutorial/energy/demand/Heating/3_convection/build_full_video.py",
+      "tutorial/energy/demand/Heating/4_internal_heat_gain/scene_4.py",
+      "tutorial/energy/demand/Heating/5_solar_heat_gain/scene_5.py",
+      "tutorial/energy/demand/Heating/final_calculation/merged_scenes.py",
+      "tutorial/energy/demand/Heating/full_heating_video.py",
+      "tutorial/energy/demand/KONZEPTE_UND_FORMELN.md"
+    ]
+  }
 }

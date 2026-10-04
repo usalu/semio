@@ -1,0 +1,149 @@
+class Beat1_GebaeudeKonvektion(Scene):
+    NARRATION = [
+        ("intro",
+         "Warm indoor air rises and escapes through gaps — cold outdoor air slips in to replace it.",
+         "Warme Innenluft steigt und entweicht durch Fugen — kalte Außenluft strömt nach."),
+        ("zones",
+         "Inside stays warm; outside stays cold. Air exchanging through the openings is ventilation, not the U-value.",
+         "Innen bleibt warm, außen bleibt kalt. Der Austausch durch die Öffnungen ist Lüftung — nicht der U-Wert."),
+        ("flow",
+         "Watch the particles: heat leaves with the orange stream while the blue stream cools the room.",
+         "Beobachten Sie die Partikel: Wärme geht mit dem orangen Strom, der blaue Strom kühlt den Raum."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        play_scene_title(self, title)
+        subtitle = beat_subtitle("Das Gebäude & Lüftung", title)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        # The house is built at its original coordinates, then the whole group is
+        # dropped by DY: the roof peak (y≈2.5) used to sit right under the beat
+        # subtitle while a wide empty band opened below the floor, so the section
+        # read as top-heavy. Lowering it centres the house in the free frame.
+        # Every particle band below is derived from the same DY.
+        DY = -0.5
+        WALL_X = 1.0
+
+        floor = Line([-3.0, -1.2, 0], [1.0, -1.2, 0], color=GREY_A, stroke_width=4)
+        left_wall = Line([-3.0, -1.2, 0], [-3.0, 1.5, 0], color=GREY_A, stroke_width=4)
+        roof_left = Line([-3.0, 1.5, 0], [-1.0, 2.5, 0], color=GREY_A, stroke_width=4)
+        roof_right = Line([-1.0, 2.5, 0], [1.0, 1.5, 0], color=GREY_A, stroke_width=4)
+        right_wall_bot = Line([1.0, -1.2, 0], [1.0, -0.5, 0], color=GREY_A, stroke_width=4)
+        right_wall_mid = Line([1.0, 0.5, 0], [1.0, 1.1, 0], color=GREY_A, stroke_width=4)
+
+        # Two openings in the right wall: the lower one lets cold air in, the
+        # upper one — "das Fenster" — is the only way warm air leaves.
+        gap_inlet = Line([1.0, -0.5, 0], [1.0, 0.5, 0], color=P_BLUE, stroke_width=2).set_opacity(0.4)
+        gap_window = Line([1.0, 1.1, 0], [1.0, 1.5, 0], color=P_ORANGE, stroke_width=2).set_opacity(0.4)
+
+        house = VGroup(
+            floor, left_wall, roof_left, roof_right,
+            right_wall_bot, right_wall_mid, gap_inlet, gap_window,
+        )
+        house.shift(UP * DY)
+
+        # Opening bands and floor, in absolute coordinates after the shift — the
+        # particle updaters steer every dot into one of these before it may cross
+        # the wall, so a dot can only ever pass through an actual opening.
+        WIN_LO, WIN_HI = 1.1 + DY, 1.5 + DY
+        INLET_LO, INLET_HI = -0.5 + DY, 0.5 + DY
+        INLET_MID = 0.5 * (INLET_LO + INLET_HI)
+        FLOOR_Y = -1.2 + DY
+
+        txt_innen = Text("Innen", font_size=BODY_FONT_SIZE, color=P_ORANGE)
+        txt_warm = Text("Warm", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        label_inside = VGroup(txt_innen, txt_warm).arrange(DOWN, buff=0.12).move_to([-1.5, 0.1 + DY, 0])
+
+        txt_aussen = Text("Außen", font_size=BODY_FONT_SIZE, color=P_BLUE)
+        txt_kalt = Text("Kalt", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        label_outside = VGroup(txt_aussen, txt_kalt).arrange(DOWN, buff=0.12).move_to([2.8, 0.1 + DY, 0])
+
+        self.play(Create(house), run_time=1.5)
+        self.play(FadeIn(label_inside), FadeIn(label_outside), run_time=1.0)
+        hold_for(self, self.NARRATION, "intro", used=1.5 + 1.0 + 0.35)
+
+        np.random.seed(42)
+        orange_dots = VGroup(*[
+            Dot(
+                point=[np.random.uniform(-2.7, 0.4), np.random.uniform(FLOOR_Y + 0.2, 1.0 + DY), 0],
+                radius=0.04, color=P_ORANGE,
+            )
+            for _ in range(70)
+        ])
+        blue_dots = VGroup(*[
+            Dot(
+                point=[np.random.uniform(1.5, 3.5), np.random.uniform(FLOOR_Y + 0.1, 1.2 + DY), 0],
+                radius=0.04, color=P_BLUE,
+            )
+            for _ in range(70)
+        ])
+        # Each dot keeps a fixed lane inside its opening, so the exchange reads as
+        # a band of air filling the whole gap rather than a single-file line —
+        # while every lane still lies strictly within the opening, so no dot ever
+        # crosses a solid part of the wall.
+        for _d in orange_dots:
+            _d.lane_y = np.random.uniform(WIN_LO + 0.04, WIN_HI - 0.04)
+        for _d in blue_dots:
+            _d.lane_y = np.random.uniform(INLET_LO + 0.08, INLET_HI - 0.08)
+
+        self.play(FadeIn(orange_dots), FadeIn(blue_dots), run_time=1.0)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zones"))
+        hold_for(self, self.NARRATION, "zones", used=1.0 + 0.35)
+
+        def update_orange_particles(group, dt):
+            """🔥 Warm air rises to its window lane and leaves only through the opening."""
+            for dot in group:
+                x, y, _ = dot.get_center()
+                if x < WALL_X - 0.05:
+                    y += (dot.lane_y - y) * 2.1 * dt
+                    aligned = WIN_LO - 0.05 <= y <= WIN_HI + 0.05
+                    x += (1.05 if aligned else 0.55) * dt
+                    if not aligned:
+                        x = min(x, WALL_X - 0.07)
+                else:
+                    x += 1.15 * dt
+                    y += 0.8 * dt
+                if x > 3.7 or y > 3.0:
+                    x = np.random.uniform(-2.7, 0.1)
+                    y = np.random.uniform(FLOOR_Y + 0.2, 0.6 + DY)
+                    dot.lane_y = np.random.uniform(WIN_LO + 0.04, WIN_HI - 0.04)
+                dot.move_to([x, y, 0])
+
+        def update_blue_particles(group, dt):
+            """❄️ Cold air sinks to its inlet lane and enters only through the opening."""
+            for dot in group:
+                x, y, _ = dot.get_center()
+                if x > WALL_X + 0.05:
+                    y += (dot.lane_y - y) * 2.1 * dt
+                    aligned = INLET_LO - 0.05 <= y <= INLET_HI + 0.05
+                    x -= (1.05 if aligned else 0.55) * dt
+                    if not aligned:
+                        x = max(x, WALL_X + 0.07)
+                else:
+                    x -= 1.0 * dt
+                    y -= 0.5 * dt
+                if x < -2.8 or y < FLOOR_Y:
+                    x = np.random.uniform(1.5, 3.5)
+                    y = np.random.uniform(INLET_MID, 1.3 + DY)
+                    dot.lane_y = np.random.uniform(INLET_LO + 0.08, INLET_HI - 0.08)
+                dot.move_to([x, y, 0])
+
+        orange_dots.add_updater(update_orange_particles)
+        blue_dots.add_updater(update_blue_particles)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flow"))
+        hold_for(self, self.NARRATION, "flow", used=0.35)
+
+        orange_dots.remove_updater(update_orange_particles)
+        blue_dots.remove_updater(update_blue_particles)
+
+        self.play(FadeOut(caption), FadeOut(orange_dots), FadeOut(blue_dots), run_time=0.3)
+        self.wait(0.5)
+

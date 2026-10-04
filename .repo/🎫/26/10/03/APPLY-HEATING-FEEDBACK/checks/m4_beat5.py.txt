@@ -1,0 +1,192 @@
+#region Beat5 — Sum Φ_int and specific density
+#region Beat5 layout
+B5_BAR_UNIT = 2.4 / PHI_INT_W
+B5_BAR_W = 0.62
+B5_BASE_Y = -0.75
+B5_BAR_XS = (-5.30, -3.85, -2.40)
+B5_STACK_X = -0.60
+B5_PLAN_C = np.array([3.40, 0.35, 0.0])
+B5_PLAN_UNIT = 0.5
+#endregion
+
+
+class Beat5_SummeUndDichte(Scene):
+    NARRATION = [
+        ("sources",
+         "Persons, equipment, and lighting are the three internal sources.",
+         "Personen, Geräte und Beleuchtung sind die drei internen Quellen."),
+        ("sum",
+         "Phi int equals Phi p plus Phi e plus Phi l — total free heat in watts.",
+         "Phi-int ist Phi-p plus Phi-e plus Phi-l — die gesamte freie Wärme in Watt."),
+        ("density",
+         "Divide by the net floor area A N to get watts per square meter.",
+         "Geteilt durch die Nettogrundfläche A-N ergibt Watt pro Quadratmeter."),
+        ("din",
+         "That specific flux q int is tabulated in DIN V 18599-10.",
+         "Diese spezifische Dichte q-int steht tabellarisch in DIN V 18599-10."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Summe und Wärmestromdichte", title)
+        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "sources"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        sources = (
+            ("p", PHI_P_W, COLOR_PEOPLE, "Personen"),
+            ("e", PHI_E_W, COLOR_EQUIP, "Geräte"),
+            ("l", PHI_L_W, COLOR_LIGHT, "Beleuchtung"),
+        )
+        grow = [ValueTracker(0.0) for _ in sources]
+
+        def bar_h(t):
+            return max(0.002, t.get_value() * B5_BAR_UNIT)
+
+        bars, tokens, names, values = VGroup(), VGroup(), VGroup(), VGroup()
+        for (key, _w, color, name), x, t in zip(sources, B5_BAR_XS, grow):
+            bar = Rectangle(
+                width=B5_BAR_W, height=0.002, color=color, stroke_width=1.2,
+                fill_color=color, fill_opacity=0.78,
+            )
+            bar.add_updater(lambda m, x=x, t=t: m.stretch_to_fit_height(bar_h(t)).move_to(
+                np.array([x, B5_BASE_Y + bar_h(t) / 2, 0.0])))
+            bars.add(bar)
+            tokens.add(math_label(_phi(key), size=BODY_FONT_SIZE, color=color).move_to(
+                np.array([x, B5_BASE_Y - 0.30, 0.0])))
+            names.add(Text(name, font_size=LABEL_FONT_SIZE, color=color).move_to(
+                np.array([x, B5_BASE_Y - 0.66, 0.0])))
+            values.add(math_readout(
+                lambda t=t: rf"{de_num(t.get_value())}\,\mathrm{{W}}",
+                lambda bar=bar: bar.get_top() + UP * 0.14,
+                size=LABEL_FONT_SIZE, color=color, edge="center",
+            ))
+
+        total = ValueTracker(0.0)
+        total_live = math_readout(
+            lambda: _watts("int", total),
+            np.array([B5_STACK_X, B5_BASE_Y + PHI_INT_W * B5_BAR_UNIT + 0.22, 0.0]),
+            size=BODY_FONT_SIZE, color=COLOR_HEAT, edge="center",
+        )
+
+        self.add(*bars, *values)
+        self.play(
+            *[FadeIn(m, shift=DOWN * 0.2) for m in (*tokens, *names)],
+            *[t.animate.set_value(w) for t, (_k, w, _c, _n) in zip(grow, sources)],
+            run_time=1.2,
+        )
+        hold_for(self, self.NARRATION, "sources", used=1.2 + 0.3)
+
+        for bar in bars:
+            bar.clear_updaters()
+        heights = [w * B5_BAR_UNIT for _k, w, _c, _n in sources]
+        lows = np.cumsum([0.0, *heights[:-1]])
+        stack_moves, token_moves = [], []
+        for bar, tok, h, lo in zip(bars, tokens, heights, lows):
+            mid = np.array([B5_STACK_X, B5_BASE_Y + lo + h / 2, 0.0])
+            stack_moves.append(bar.animate.move_to(mid))
+            token_moves.append(tok.animate.move_to(mid + LEFT * (B5_BAR_W / 2 + 0.40)))
+        self.add(total_live)
+        self.play(
+            FadeOut(values), FadeOut(names),
+            *stack_moves, *token_moves,
+            total.animate.set_value(PHI_INT_W),
+            run_time=1.4,
+        )
+
+        row, box, items = math_panel(_sum_parts(["p", "e", "l"], lead="int"), edge_buff=FORMULA_EDGE_BUFF)
+        # The three source tokens are smaller than the panel glyphs they merge
+        # into, so each scales to its target glyph's height as it travels.
+        p_tok, e_tok, l_tok = tokens
+        self.play(
+            p_tok.animate.scale(items["phi_p"].height / p_tok.height).move_to(items["phi_p"].get_center()),
+            e_tok.animate.scale(items["phi_e"].height / e_tok.height).move_to(items["phi_e"].get_center()),
+            l_tok.animate.scale(items["phi_l"].height / l_tok.height).move_to(items["phi_l"].get_center()),
+            FadeIn(row), Create(box),
+            run_time=1.6,
+        )
+        self.remove(p_tok, e_tok, l_tok)
+        ring = highlight_param(items, "phi_int", color=P_ORANGE)
+        self.play(Create(ring), run_time=0.45)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sum"))
+        hold_for(self, self.NARRATION, "sum", used=1.4 + 1.6 + 0.45 + 0.35)
+        self.play(FadeOut(ring), run_time=0.25)
+
+        density_sub = beat_subtitle("Spezifische Wärmestromdichte (DIN V 18599-10)", title)
+        self.play(ReplacementTransform(subtitle, density_sub), run_time=0.7)
+        subtitle = density_sub
+
+        row2, box2, items2 = math_panel([
+            ("q_int", r"q_{\mathrm{int}}", COLOR_HEAT),
+            (None, "=", P_WHITE),
+            ("frac", rf"\frac{{{_phi('int')}}}{{\textcolor{{{P_CYAN}}}{{A_{{\mathrm{{N}}}}}}}}", P_WHITE),
+            (None, r"\;[\mathrm{W/m^{2}}]", P_WHITE),
+        ], edge_buff=FORMULA_EDGE_BUFF)
+        self.play(ReplacementTransform(row, row2), ReplacementTransform(box, box2), run_time=1.4)
+        row, box, items = row2, box2, {**items2, "a_n": items2["frac"][0][2]}
+
+        pw, pd = ROOM_W_M * B5_PLAN_UNIT, ROOM_D_M * B5_PLAN_UNIT
+        plan = Rectangle(
+            width=pw, height=pd, color=GREY_B, stroke_width=4,
+            fill_color=P_CYAN, fill_opacity=0.10,
+        ).move_to(B5_PLAN_C)
+        plan_tag = Text("Grundriss Büro", font_size=LABEL_FONT_SIZE, color=GREY_B)
+        plan_tag.next_to(plan, UP, buff=0.14)
+        w_dim = dim_arrow(plan.get_corner(DL) + DOWN * 0.25, plan.get_corner(DR) + DOWN * 0.25, color=P_CYAN)
+        d_dim = dim_arrow(plan.get_corner(DR) + RIGHT * 0.25, plan.get_corner(UR) + RIGHT * 0.25, color=P_CYAN)
+        w_on, d_on = ValueTracker(0.0), ValueTracker(0.0)
+
+        def area():
+            return w_on.get_value() * ROOM_W_M * d_on.get_value() * ROOM_D_M
+
+        w_live = math_readout(
+            lambda: rf"{de_num(w_on.get_value() * ROOM_W_M)}\,\mathrm{{m}}",
+            np.array([plan.get_center()[0], plan.get_bottom()[1] - 0.62, 0.0]),
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="center",
+        )
+        d_live = math_readout(
+            lambda: rf"{de_num(d_on.get_value() * ROOM_D_M)}\,\mathrm{{m}}",
+            np.array([plan.get_right()[0] + 0.45, plan.get_center()[1] - 0.08, 0.0]),
+            size=LABEL_FONT_SIZE, color=P_CYAN,
+        )
+        a_live = math_readout(
+            lambda: rf"A_{{\mathrm{{N}}}} = {de_num(area())}\,\mathrm{{m^{{2}}}}",
+            np.array([plan.get_center()[0], plan.get_center()[1] - 0.10, 0.0]),
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="center",
+        )
+        q_on = ValueTracker(0.0)
+        q_live = math_readout(
+            lambda: (rf"q_{{\mathrm{{int}}}} = \frac{{{de_num(total.get_value())}\,\mathrm{{W}}}}"
+                     rf"{{{de_num(area())}\,\mathrm{{m^{{2}}}}}}"
+                     rf" = {de_num(q_on.get_value() * total.get_value() / max(area(), 1e-6), 1)}\,\mathrm{{W/m^{{2}}}}"),
+            np.array([plan.get_center()[0], plan_tag.get_top()[1] + 0.42, 0.0]),
+            size=BODY_FONT_SIZE, color=COLOR_HEAT, edge="center",
+        )
+
+        self.play(Create(plan), FadeIn(plan_tag), run_time=0.8)
+        self.add(w_live, d_live, a_live)
+        self.play(
+            Create(w_dim), Create(d_dim),
+            w_on.animate.set_value(1.0), d_on.animate.set_value(1.0),
+            run_time=1.2,
+        )
+        ring = highlight_param(items, "a_n", color=P_CYAN)
+        self.play(Create(ring), run_time=0.45)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "density"))
+        hold_for(self, self.NARRATION, "density", used=1.4 + 0.8 + 1.2 + 0.45 + 0.35)
+        self.play(FadeOut(ring), run_time=0.25)
+
+        ring = highlight_param(items, "q_int", color=COLOR_HEAT)
+        self.add(q_live)
+        self.play(Create(ring), q_on.animate.set_value(1.0), run_time=1.2)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "din"))
+        hold_for(self, self.NARRATION, "din", used=1.2 + 0.35)
+        self.play(FadeOut(ring), run_time=0.25)
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion

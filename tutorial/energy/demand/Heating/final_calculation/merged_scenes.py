@@ -13,24 +13,193 @@ _TUTORIAL_ROOT = next(
 if str(_TUTORIAL_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_TUTORIAL_ROOT))
 
-from manim_fonts import apply_scene_style, BODY_FONT
-from manim_visuals import caption_bar, swap_caption, hold_for, subtitle_text, set_vo_language
+from manim_fonts import apply_scene_style, BODY_FONT, LABEL_FONT_SIZE
+from manim_visuals import (
+    P_WHITE, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
+    caption_bar, swap_caption, hold_for, subtitle_text, set_vo_language, begin_vo_beat,
+    math_label, math_row, math_readout, math_panel, de_num, animate_flows,
+)
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
 set_vo_language("de")
 
 
+#region Shared numbers
+#region Envelope and ventilation (Modul 2 / Modul 3)
+_DT = 20.0
+_ENVELOPE = [
+    ("Dach", 89.0, 0.20, 20.0),
+    ("Außenwand", 209.0, 0.24, 20.0),
+    ("Fenster", 30.0, 1.10, 20.0),
+    ("Haustür", 2.0, 1.30, 20.0),
+    ("Boden", 80.0, 0.30, 10.0),
+]
+_PHI_T = sum(a * u * dt for _n, a, u, dt in _ENVELOPE)
+_H_T = _PHI_T / _DT
+_V_NET, _N_AIR, _C_AIR = 440.0, 0.5, 0.34
+_PHI_V = _V_NET * _N_AIR * _C_AIR * _DT
+_H_V = _PHI_V / _DT
+_PHI_LOSS = _PHI_T + _PHI_V
+#endregion
+
+#region Annual balance
+_SEASON_DAYS = 212
+_GT = 3500.0
+_Q_LOSS = (round(_H_T, 1) + round(_H_V, 1)) * _GT * 24.0 / 1000.0
+_Q_LOSS_SHOWN = round(_Q_LOSS, -2)
+_Q_SOL, _Q_INT = 3000.0, 2000.0
+_Q_GAIN = _Q_SOL + _Q_INT
+#endregion
+
+#region Utilization day (Scene4)
+_DAY_T = np.linspace(0.0, 24.0, 241)
+_MASS_SHARE = 0.7
+
+
+def _loss_kw(t):
+    """🥶 Loss power of the example house over a clear winter day — H · (θ_i − θ_e(t))."""
+    return (_H_T + _H_V) / 1000.0 * (20.0 - (2.0 + 4.0 * np.cos(2.0 * np.pi * (t - 15.0) / 24.0)))
+
+
+def _internal_kw(t):
+    """🧑‍🍳 Internal gains: base load plus morning and evening occupancy peaks."""
+    return 0.35 + 0.25 * np.exp(-((t - 7.5) / 1.2) ** 2) + 0.45 * np.exp(-((t - 19.0) / 2.0) ** 2)
+
+
+def _solar_kw(t, peak):
+    """🌞 Solar gains through the south windows between sunrise and sunset."""
+    return peak * np.clip(np.sin(np.pi * (t - 8.0) / 8.5), 0.0, None) ** 1.5 * ((t > 8.0) & (t < 16.5))
+
+
+def _gain_kw(peak, mass):
+    """⚖️ Gain curve; ``mass`` stores part of the surplus and releases it after sunset."""
+    gain = _internal_kw(_DAY_T) + _solar_kw(_DAY_T, peak)
+    surplus = np.maximum(0.0, gain - _loss_kw(_DAY_T))
+    shape = np.exp(-((_DAY_T - 19.5) / 2.0) ** 2)
+    shape /= np.trapezoid(shape, _DAY_T)
+    stored = _MASS_SHARE * mass
+    return gain - stored * surplus + stored * np.trapezoid(surplus, _DAY_T) * shape
+
+
+def _utilization(peak, mass, upto: float = 24.0):
+    """🧮 ``(A_nutz, A_Gewinn, η)`` integrated from the sampled curves up to hour ``upto``; η is over the whole day."""
+    gain = _gain_kw(peak, mass)
+    used = np.minimum(gain, _loss_kw(_DAY_T))
+    cut = _DAY_T <= upto + 1e-9
+    if cut.sum() < 2:
+        return 0.0, 0.0, 0.0
+    a_used = float(np.trapezoid(used[cut], _DAY_T[cut]))
+    a_gain = float(np.trapezoid(gain[cut], _DAY_T[cut]))
+    return a_used, a_gain, a_used / float(np.trapezoid(gain, _DAY_T))
+
+
+def _solve_solar_peak(target: float = 0.90) -> float:
+    """🎯 Solar peak that makes the light house reach ``target`` utilization."""
+    lo, hi = 2.0, 6.0
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if _utilization(mid, 0.0)[2] > target else (lo, mid)
+    return (lo + hi) / 2
+
+
+_SOLAR_PEAK = _solve_solar_peak()
+_ETA_LIGHT = _utilization(_SOLAR_PEAK, 0.0)[2]
+_ETA_HEAVY = _utilization(_SOLAR_PEAK, 1.0)[2]
+_ETA = round(_ETA_LIGHT, 2)
+_Q_USE = _ETA * _Q_GAIN
+_Q_H = _Q_LOSS_SHOWN - _Q_USE
+#endregion
+
+#region System losses (DIN V 18599-5)
+_CE_SHARE = 0.05
+_PIPE_M, _PIPE_W_PER_M, _PIPE_H = 30.0, 10.0, 2900.0
+_STORE_KWH_D, _STORE_D = 1.5, 200.0
+_ETA_G = 0.95
+_Q_CE = _CE_SHARE * _Q_H
+_Q_D = _PIPE_M * _PIPE_W_PER_M * _PIPE_H / 1000.0
+_Q_S = _STORE_KWH_D * _STORE_D
+_Q_BEFORE_G = _Q_H + _Q_CE + _Q_D + _Q_S
+_Q_G = _Q_BEFORE_G * (1.0 / _ETA_G - 1.0)
+_Q_E = _Q_BEFORE_G + _Q_G
+#endregion
+#endregion
+
+
+#region Shared helpers
+def _heading(text: str, *, size: float = 34, buff: float = 0.6):
+    """🏷️ Topic heading in the style every scene of this file uses."""
+    return Text(text, font_size=size, color=WHITE, font=BODY_FONT, disable_ligatures=True).to_edge(UP, buff=buff)
+
+
+def _label(text: str, *, size: float = 16, color=GREY_A):
+    """🔤 Plain body-font label."""
+    return Text(text, font_size=size, color=color, font=BODY_FONT, disable_ligatures=True)
+
+
+def _slot(mob):
+    """📍 Left baseline point of a typeset box — where a live readout replaces it."""
+    return np.array([mob.get_left()[0], mob.base.get_center()[1], 0.0])
+
+
+def _freeze(readout):
+    """🧊 Stop a live readout so it can morph like a static label."""
+    readout.clear_updaters()
+    return readout
+
+
+def _wall_glyph(color, *, height: float = 1.0, width: float = 0.26):
+    """🧱 Hatched wall section."""
+    wall = Rectangle(height=height, width=width, color=color, fill_opacity=0.2, stroke_width=2)
+    hatch = VGroup(*[
+        Line(wall.get_left() + UP * y + RIGHT * 0.02, wall.get_right() + UP * (y + 0.12) + LEFT * 0.02,
+             color=color, stroke_width=1.5)
+        for y in np.linspace(-0.32, 0.22, 4) * height
+    ])
+    return VGroup(wall, hatch)
+
+
+def _window_glyph(color, *, side: float = 0.8):
+    """🪟 Crossed window frame."""
+    frame = Square(side_length=side, color=color, stroke_width=2)
+    cross = VGroup(
+        Line(frame.get_top(), frame.get_bottom(), color=color, stroke_width=1.5),
+        Line(frame.get_left(), frame.get_right(), color=color, stroke_width=1.5),
+    )
+    return VGroup(frame, cross)
+
+
+def _through_paths(mob, *, reach: float = 0.65, rows=(-0.28, 0.0, 0.28), reverse: bool = False):
+    """➡️ Straight particle tracks crossing ``mob`` from inside (left) to outside (right)."""
+    c, h = mob.get_center(), mob.height
+    paths = []
+    for r in rows:
+        a = c + LEFT * (mob.width / 2 + reach) + UP * r * h
+        b = c + RIGHT * (mob.width / 2 + reach) + UP * r * h
+        paths.append(Line(b, a) if reverse else Line(a, b))
+    return paths
+
+
+def _gt_profile():
+    """🌡️ Daily θ_i − θ_e over the heating season; its sum is exactly the degree-day total G_t."""
+    rng = np.random.default_rng(18599)
+    days = np.arange(_SEASON_DAYS)
+    noise = np.convolve(rng.normal(0.0, 2.4, days.size), np.ones(5) / 5, mode="same")
+    base = 9.0 * np.sin(np.pi * (days + 0.5) / _SEASON_DAYS) + noise
+    return base + (_GT - base.sum()) / days.size
+#endregion
+
+
 class ReviewingHeatLosses(Scene):
     NARRATION = [
         ("trans",
-         "Remember the envelope story: heat still leaks through walls as Phi trans — U times A times Delta theta.",
-         "Erinnern Sie die Hüllen-Geschichte: Wärme leckt noch durch Wände als Phi-trans — U mal A mal Delta-Theta."),
+         "From module 2: heat flows through walls, roof, windows and floor as Phi T — the sum of U times A times Delta theta.",
+         "Aus Modul 2: Wärme fließt durch Wand, Dach, Fenster und Boden als Phi-T — Summe aus U mal A mal Delta-Theta, rund 2 311 W."),
         ("vent",
-         "And the ventilation story returns: air change carries heat out as Phi vent — V times n times c Luft times Delta theta.",
-         "Und die Lüftungs-Geschichte kehrt zurück: Luftwechsel trägt Wärme als Phi-vent hinaus — V mal n mal c-Luft mal Delta-Theta."),
+         "From module 3: the air change carries heat out as Phi V — V times n times c Luft times Delta theta.",
+         "Aus Modul 3: Der Luftwechsel trägt Wärme als Phi-V hinaus — V mal n mal c-Luft mal Delta-Theta, rund 1 496 W."),
         ("total",
-         "Add both journeys and you get the total heat-loss power Phi Verlust — after DIN V 18599-2.",
-         "Beide Wege addieren ergibt die Gesamtwärmeverlustleistung Phi-Verlust — nach DIN V 18599-2."),
+         "Both add up to the total heat-loss power Phi Verlust — after DIN V 18599-2.",
+         "Beide zusammen ergeben die Gesamtwärmeverlustleistung Phi-Verlust von rund 3 807 W — nach DIN V 18599-2."),
     ]
 
     def construct(self):
@@ -39,143 +208,93 @@ class ReviewingHeatLosses(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "trans"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        # Topic heading — same placement and size as ``ReviewingHeatGains``.
-        title = Text(
-            "Übersicht der Wärmeverluste", font_size=34, color=WHITE,
-            font=BODY_FONT, disable_ligatures=True,
-        )
-        title.to_edge(UP, buff=0.6)
+        title = _heading("Übersicht der Wärmeverluste")
 
-        # Color definitions
         ICY_BLUE = "#38BDF8"
         DEEP_BLUE = "#1D4ED8"
+        WARM = "#F97316"
+        X0 = -6.3
 
-        # --- TRANSMISSION SECTION (Icy Blue: #38BDF8) ---
-        trans_formula = Text("Φ_trans = U  ·  A  ·  Δθ", font_size=28, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True)
+        #region transmission
+        trans_formula = math_label(r"\Phi_{\mathrm{T}} = \Sigma\, U_{i} \cdot A_{i} \cdot \Delta\theta",
+                                   np.array([X0, 1.75, 0.0]), size=28, color=ICY_BLUE, edge="left")
+        wall_icon = _wall_glyph(ICY_BLUE).move_to(np.array([-5.25, 0.75, 0.0]))
+        phi_t = ValueTracker(0.0)
+        t_read = math_readout(lambda: rf"\Phi_{{\mathrm{{T}}}} \approx {de_num(phi_t.get_value())}\,\mathrm{{W}}",
+                              np.array([-4.15, 0.68, 0.0]), size=26, color=ICY_BLUE)
 
-        wall = Rectangle(
-            height=0.8, width=0.2, color=ICY_BLUE, fill_opacity=0.2, stroke_width=2
-        )
-        wall_lines = VGroup(
-            *[
-                Line(
-                    wall.get_left() + UP * y + RIGHT * 0.02,
-                    wall.get_right() + UP * (y + 0.1) + LEFT * 0.02,
-                    color=ICY_BLUE,
-                    stroke_width=1.5,
-                )
-                for y in [-0.25, -0.05, 0.15]
-            ]
-        )
-        wall_arrow = Arrow(
-            LEFT * 0.5,
-            RIGHT * 0.5,
-            color=ICY_BLUE,
-            stroke_width=3,
-            max_tip_length_to_length_ratio=0.3,
-        ).move_to(wall.get_center())
-        wall_icon = VGroup(wall, wall_lines, wall_arrow)
-
-        trans_section = VGroup(trans_formula, wall_icon).arrange(
-            DOWN, buff=0.3, aligned_edge=LEFT
-        )
-
-        # --- LÜFTUNGSSECTION (Deep Blue: #1D4ED8) ---
-        vent_formula = Text(
-            "Φ_vent = V  ·  n  ·  c_Luft  ·  Δθ", font_size=28, color=DEEP_BLUE
-        , font=BODY_FONT, disable_ligatures=True)
-
-        win_frame = Square(side_length=0.8, color=DEEP_BLUE, stroke_width=2)
-        win_cross = VGroup(
-            Line(
-                win_frame.get_top(),
-                win_frame.get_bottom(),
-                color=DEEP_BLUE,
-                stroke_width=1.5,
-            ),
-            Line(
-                win_frame.get_left(),
-                win_frame.get_right(),
-                color=DEEP_BLUE,
-                stroke_width=1.5,
-            ),
-        )
-        win_arrow = CurvedArrow(
-            win_frame.get_left() + DOWN * 0.2,
-            win_frame.get_right() + UP * 0.2,
-            color=DEEP_BLUE,
-            angle=-TAU / 6,
-            stroke_width=3,
-        )
-        win_icon = VGroup(win_frame, win_cross, win_arrow)
-
-        vent_section = VGroup(vent_formula, win_icon).arrange(
-            DOWN, buff=0.3, aligned_edge=LEFT
-        )
-
-        # --- LAYOUT POSITIONING ---
-        left_side = VGroup(trans_section, vent_section).arrange(
-            DOWN, buff=0.9, aligned_edge=LEFT
-        )
-        left_side.to_edge(LEFT, buff=1.0).shift(UP * 0.2)
-
-        # --- GROUPING & TOTAL LOSS (White) ---
-        brace = Brace(left_side, RIGHT, color=WHITE, buff=0.35)
-        arrow = Arrow(
-            brace.get_right(),
-            brace.get_right() + RIGHT * 0.9,
-            color=WHITE,
-            buff=0.1,
-            stroke_width=3,
-        )
-
-        loss_desc = Text(
-            "Gesamtwärmeverlustleistung (DIN V 18599-2)", font_size=16, color=GREY_A
-        , font=BODY_FONT, disable_ligatures=True)
-        loss_title = Text("Φ_Verlust", font_size=36, color=WHITE, font=BODY_FONT, disable_ligatures=True).next_to(
-            loss_desc, UP, buff=0.15
-        )
-        loss_box = VGroup(loss_title, loss_desc)
-        loss_box.next_to(arrow, RIGHT, buff=0.25)
-
-        # --- ANIMATION BEATS ---
         self.play(
             Write(title),
             FadeIn(trans_formula, shift=DOWN * 0.1),
             FadeIn(wall_icon, shift=RIGHT * 0.2),
             run_time=2.0,
         )
-        hold_for(self, self.NARRATION, "trans", used=0.3 + 2.0)
+        self.add(t_read)
+        animate_flows(self, [(_through_paths(wall_icon[0]), WARM, ICY_BLUE)], run_time=3.0, waves=4,
+                      cycles=2.0, extra=[phi_t.animate.set_value(_PHI_T)])
+        hold_for(self, self.NARRATION, "trans", used=0.3 + 2.0 + 3.0)
+        #endregion
 
+        #region ventilation
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vent"))
+        vent_formula = math_label(r"\Phi_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta",
+                                  np.array([X0, -0.2, 0.0]), size=28, color=DEEP_BLUE, edge="left")
+        win_icon = _window_glyph(DEEP_BLUE).move_to(np.array([-5.25, -1.15, 0.0]))
+        phi_v = ValueTracker(0.0)
+        v_read = math_readout(lambda: rf"\Phi_{{\mathrm{{V}}}} \approx {de_num(phi_v.get_value())}\,\mathrm{{W}}",
+                              np.array([-4.15, -1.22, 0.0]), size=26, color=DEEP_BLUE)
         self.play(
             FadeIn(vent_formula, shift=DOWN * 0.1),
             FadeIn(win_icon, shift=RIGHT * 0.2),
             run_time=2.0,
         )
-        hold_for(self, self.NARRATION, "vent", used=0.35 + 2.0)
+        self.add(v_read)
+        out_paths = _through_paths(win_icon, reach=0.55, rows=(0.22,))
+        in_paths = _through_paths(win_icon, reach=0.55, rows=(-0.22,), reverse=True)
+        animate_flows(self, [(out_paths, WARM, ICY_BLUE), (in_paths, P_BLUE, WARM)], run_time=3.0, waves=4,
+                      cycles=2.0, extra=[phi_v.animate.set_value(_PHI_V)])
+        hold_for(self, self.NARRATION, "vent")
+        #endregion
 
+        #region total
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "total"))
+        left_side = VGroup(trans_formula, wall_icon, vent_formula, win_icon, t_read, v_read)
+        brace = Brace(left_side, RIGHT, color=WHITE, buff=0.35)
+        arrow = Arrow(brace.get_right(), brace.get_right() + RIGHT * 0.9, color=WHITE, buff=0.1, stroke_width=3)
+        loss_desc = _label("Gesamtwärmeverlustleistung (DIN V 18599-2)")
+        loss_title = math_label(r"\Phi_{\mathrm{Verlust}}", size=36).next_to(loss_desc, UP, buff=0.15)
+        loss_slot = math_label(rf"= {de_num(_PHI_LOSS)}\,\mathrm{{W}}", size=32).next_to(loss_desc, DOWN, buff=0.25)
+        loss_box = VGroup(loss_title, loss_desc, loss_slot).next_to(arrow, RIGHT, buff=0.25)
+        tot = ValueTracker(0.0)
+        tot_read = math_readout(lambda: rf"= {de_num(tot.get_value())}\,\mathrm{{W}}", _slot(loss_slot), size=32)
+
         self.play(GrowFromCenter(brace), run_time=1.5)
         self.wait(0.5)
-
-        self.play(GrowArrow(arrow), FadeIn(loss_box, shift=RIGHT * 0.2), run_time=2.0)
-
-        hold_for(self, self.NARRATION, "total", used=0.35 + 1.5 + 0.5 + 2.0)
+        self.play(GrowArrow(arrow), FadeIn(VGroup(loss_title, loss_desc), shift=RIGHT * 0.2), run_time=2.0)
+        flying = [_freeze(t_read).copy(), _freeze(v_read).copy()]
+        self.add(tot_read, *flying)
+        self.play(*[f.animate.move_to(loss_slot).set_opacity(0.0) for f in flying],
+                  tot.animate.set_value(_PHI_LOSS), run_time=2.0)
+        self.remove(*flying)
+        hold_for(self, self.NARRATION, "total")
         self.play(FadeOut(caption), run_time=0.3)
+        #endregion
 
 
 class Scene2(Scene):
     NARRATION = [
         ("phi",
-         "So the loss power we just built is simply Phi Verlust equals Phi trans plus Phi vent — watts at one temperature difference.",
-         "Die Verlustleistung, die wir gerade gebaut haben, ist Phi-Verlust gleich Phi-trans plus Phi-vent — Watt bei einer Temperaturdifferenz."),
+         "So the loss power is Phi Verlust equals Phi T plus Phi V — watts at one temperature difference.",
+         "Die Verlustleistung ist Phi-Verlust gleich Phi-T plus Phi-V — Watt bei einer Temperaturdifferenz."),
         ("climate",
-         "A design-day wattage is not a yearly kilowatt-hour. Annual losses use the heat-transfer coefficients H times the degree-day total G t, not the coldest Delta theta.",
-         "Eine Auslegungs-Wattzahl ist keine Jahres-Kilowattstunde. Jahresverluste nutzen die Wärmetransferkoeffizienten H mal die Gradtagzahl G-t — nicht das kälteste Delta-Theta."),
+         "A design-day wattage is not a yearly kilowatt-hour. Per kelvin the house loses H T and H V watts.",
+         "Eine Auslegungs-Wattzahl ist keine Jahres-Kilowattstunde. Pro Kelvin verliert das Haus H-T und H-V Watt — Phi geteilt durch Delta-Theta."),
+        ("gradtag",
+         "The degree-day total G t is the area under the daily indoor-outdoor difference over the heating season.",
+         "Die Gradtagzahl G-t ist die Fläche unter der täglichen Differenz innen minus außen über die Heizperiode: rund 3 500 Kelvintage pro Jahr."),
         ("annual",
-         "Q Verlust equals H T plus H V, times G t — in kilowatt-hours per year, after DIN 4108-6 and DIN V 18599-2.",
-         "Q-Verlust ist H-T plus H-V, mal G-t — in Kilowattstunden pro Jahr, nach DIN 4108-6 und DIN V 18599-2."),
+         "Q Verlust equals H T plus H V, times G t, times 24 hours per day — in kilowatt-hours per year, after DIN 4108-6 and DIN V 18599-2.",
+         "Q-Verlust ist H-T plus H-V, mal G-t, mal 24 Stunden pro Tag — rund 16 000 kWh pro Jahr, nach DIN 4108-6 und DIN V 18599-2."),
     ]
 
     def construct(self):
@@ -184,106 +303,65 @@ class Scene2(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "phi"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        title = Text(
-            "Vom Wärmestrom zur Jahresenergie", font_size=34, color=WHITE,
-            font=BODY_FONT, disable_ligatures=True,
-        )
-        title.to_edge(UP, buff=0.55)
+        title = _heading("Vom Wärmestrom zur Jahresenergie", buff=0.55)
         self.play(Write(title), run_time=0.8)
 
         ICY_BLUE = "#38BDF8"
         DEEP_BLUE = "#0284C7"
         PURPLE = "#C084FC"
+        WARM = "#F97316"
 
-        # Step 1: Initial Heat Loss Equation and Icons (German)
-        phi_loss = Text("Φ_Verlust", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        eq_1 = Text(" = ", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        phi_trans = Text("Φ_trans", font_size=38, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True)
-        plus_1 = Text(" + ", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        phi_vent = Text("Φ_vent", font_size=38, color=DEEP_BLUE, font=BODY_FONT, disable_ligatures=True)
-
-        initial_eq = VGroup(phi_loss, eq_1, phi_trans, plus_1, phi_vent).arrange(
-            RIGHT, buff=0.12
-        )
+        #region power
+        initial_eq, ie = math_row([
+            ("loss", r"\Phi_{\mathrm{Verlust}}", WHITE), ("eq", "=", WHITE),
+            ("t", r"\Phi_{\mathrm{T}}", ICY_BLUE), ("plus", "+", WHITE), ("v", r"\Phi_{\mathrm{V}}", DEEP_BLUE),
+        ], font_size=38, buff=0.12)
         initial_eq.move_to(UP * 1.35)
 
-        # Transmission & Lüftung icons — same hatched-wall and crossed-window
-        # glyphs used in ``ReviewingHeatLosses``, only re-labelled and parked in
-        # this scene's positions.
-        wall = Rectangle(
-            height=0.8, width=0.2, color=ICY_BLUE, fill_opacity=0.2, stroke_width=2
-        )
-        wall_lines = VGroup(*[
-            Line(
-                wall.get_left() + UP * y + RIGHT * 0.02,
-                wall.get_right() + UP * (y + 0.1) + LEFT * 0.02,
-                color=ICY_BLUE,
-                stroke_width=1.5,
-            )
-            for y in [-0.25, -0.05, 0.15]
-        ])
-        wall_arrow = Arrow(
-            LEFT * 0.5,
-            RIGHT * 0.5,
-            color=ICY_BLUE,
-            stroke_width=3,
-            max_tip_length_to_length_ratio=0.3,
-        ).move_to(wall.get_center())
-        wall_glyph = VGroup(wall, wall_lines, wall_arrow)
-        wall_label = Text(
-            "Transmission", font_size=18, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True
-        ).next_to(wall_glyph, DOWN, buff=0.35)
-        wall_icon = VGroup(wall_glyph, wall_label).move_to(LEFT * 2.5 + DOWN * 0.8)
+        wall_glyph = _wall_glyph(ICY_BLUE, height=0.8, width=0.2)
+        wall_label = _label("Transmission", size=18, color=ICY_BLUE).next_to(wall_glyph, DOWN, buff=0.35)
+        wall_icon = VGroup(wall_glyph, wall_label).move_to(LEFT * 2.5 + DOWN * 0.35)
 
-        win_frame = Square(side_length=0.8, color=DEEP_BLUE, stroke_width=2)
-        win_cross = VGroup(
-            Line(
-                win_frame.get_top(), win_frame.get_bottom(),
-                color=DEEP_BLUE, stroke_width=1.5,
-            ),
-            Line(
-                win_frame.get_left(), win_frame.get_right(),
-                color=DEEP_BLUE, stroke_width=1.5,
-            ),
-        )
-        win_arrow = CurvedArrow(
-            win_frame.get_left() + DOWN * 0.2,
-            win_frame.get_right() + UP * 0.2,
-            color=DEEP_BLUE,
-            angle=-TAU / 6,
-            stroke_width=3,
-        )
-        win_glyph = VGroup(win_frame, win_cross, win_arrow)
-        window_label = Text(
-            "Lüftung", font_size=18, color=DEEP_BLUE, font=BODY_FONT, disable_ligatures=True
-        ).next_to(win_glyph, DOWN, buff=0.35)
-        window_icon = VGroup(win_glyph, window_label).move_to(RIGHT * 2.5 + DOWN * 0.8)
+        win_glyph = _window_glyph(DEEP_BLUE)
+        window_label = _label("Lüftung", size=18, color=DEEP_BLUE).next_to(win_glyph, DOWN, buff=0.35)
+        window_icon = VGroup(win_glyph, window_label).move_to(RIGHT * 2.5 + DOWN * 0.35)
 
         self.play(FadeIn(initial_eq), Create(wall_icon), Create(window_icon), run_time=2)
-        hold_for(self, self.NARRATION, "phi", used=0.3 + 0.8 + 2)
+        animate_flows(self, [(_through_paths(wall_glyph[0], reach=0.45), WARM, ICY_BLUE),
+                             (_through_paths(win_glyph, reach=0.45, rows=(0.2,)), WARM, ICY_BLUE),
+                             (_through_paths(win_glyph, reach=0.45, rows=(-0.2,), reverse=True), P_BLUE, WARM)],
+                      run_time=2.0, waves=3, cycles=1.5)
+        hold_for(self, self.NARRATION, "phi", used=0.3 + 0.8 + 2 + 2.0)
+        #endregion
 
-        # Step 2: H and G_t — annual energy is not design-load Φ times hours
+        #region heat transfer coefficients
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "climate"))
-        times_symbol = Text("→", font_size=38, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        h_sum = Text("H_T + H_V", font_size=38, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        multiplier_group = VGroup(times_symbol, h_sum).arrange(RIGHT, buff=0.18)
+        multiplier_group, mg = math_row([
+            ("arrow", r"\to", PURPLE), ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PURPLE),
+            ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
+        ], font_size=38, buff=0.18)
+        probe = VGroup(initial_eq.copy(), multiplier_group.copy()).arrange(RIGHT, buff=0.3).move_to(UP * 1.35)
+        target_initial_pos = probe[0].get_center()
+        multiplier_group.move_to(probe[1].get_center())
+        multiplier_group.shift(UP * (initial_eq.base.get_center()[1] - multiplier_group.base.get_center()[1]))
 
-        step2_full_eq = (
-            VGroup(initial_eq.copy(), multiplier_group.copy())
-            .arrange(RIGHT, buff=0.2)
-            .move_to(UP * 1.35)
+        climate_label = math_label(
+            r"H = \Phi / \Delta\theta\;[\mathrm{W/K}] \quad \text{Jahresenergie nutzt}\; H \cdot G_{\mathrm{t}}"
+            r"\text{, nicht}\; \Phi_{\mathrm{Auslegung}}",
+            size=18, color=PURPLE,
         )
-        target_initial_pos = step2_full_eq[0].get_center()
-        target_multiplier_pos = step2_full_eq[1].get_center()
+        climate_label.next_to(probe, UP, buff=0.45)
 
-        multiplier_group.move_to(target_multiplier_pos)
-
-        climate_label = Text(
-            "H = Φ / Δθ  [W/K]  —  Jahresenergie nutzt H · G_t, nicht Φ_Auslegung",
-            font_size=16,
-            color=PURPLE,
-            font=BODY_FONT, disable_ligatures=True)
-        climate_label.next_to(multiplier_group, UP, buff=0.45)
+        h_t = ValueTracker(0.0)
+        h_v = ValueTracker(0.0)
+        ht_read = math_readout(
+            lambda: rf"H_{{\mathrm{{T}}}} = \frac{{{de_num(_PHI_T)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
+                    rf"{de_num(h_t.get_value(), 1)}\,\mathrm{{W/K}}",
+            np.array([wall_icon.get_center()[0], -1.6, 0.0]), size=20, color=ICY_BLUE, edge="center")
+        hv_read = math_readout(
+            lambda: rf"H_{{\mathrm{{V}}}} = \frac{{{de_num(_PHI_V)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
+                    rf"{de_num(h_v.get_value(), 1)}\,\mathrm{{W/K}}",
+            np.array([window_icon.get_center()[0], -1.6, 0.0]), size=20, color=DEEP_BLUE, edge="center")
 
         self.play(
             initial_eq.animate.move_to(target_initial_pos),
@@ -291,92 +369,143 @@ class Scene2(Scene):
             FadeIn(climate_label),
             run_time=1.8,
         )
-        hold_for(self, self.NARRATION, "climate", used=0.35 + 1.8)
+        self.add(ht_read, hv_read)
+        self.play(h_t.animate.set_value(_H_T), h_v.animate.set_value(_H_V), run_time=2.0)
+        hold_for(self, self.NARRATION, "climate")
+        #endregion
 
-        # Step 3: Q_Verlust = (H_T + H_V) · G_t
+        #region degree days
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gradtag"))
+        profile = _gt_profile()
+        O = np.array([-5.7, -1.75, 0.0])
+        XL, YL, YMAX = 7.4, 2.4, 25.0
+
+        def cp(day, kelvin):
+            return O + RIGHT * (day / _SEASON_DAYS * XL) + UP * (kelvin / YMAX * YL)
+
+        x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
+                       tip_length=0.15, max_tip_length_to_length_ratio=0.05)
+        y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
+                       tip_length=0.15, max_tip_length_to_length_ratio=0.08)
+        y_name = math_label(r"\theta_{\mathrm{i}} - \theta_{\mathrm{e}}\;[\mathrm{K}]", size=LABEL_FONT_SIZE)
+        y_name.next_to(y_axis.get_end(), RIGHT, buff=0.14)
+        y_ticks = VGroup(*[
+            VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=P_WHITE, stroke_width=2),
+                   math_label(str(k), cp(0, k) + LEFT * 0.14 + DOWN * 0.07, size=15, edge="right"))
+            for k in (10, 20)
+        ])
+        months = ["Okt", "Nov", "Dez", "Jan", "Feb", "Mär", "Apr"]
+        starts = [0, 31, 61, 92, 123, 151, 182, _SEASON_DAYS]
+        m_marks = VGroup(*[Line(cp(d, 0) + DOWN * 0.06, cp(d, 0) + UP * 0.06, color=P_WHITE, stroke_width=2)
+                           for d in starts[1:-1]])
+        m_names = VGroup(*[_label(m, size=15, color=P_WHITE).move_to(cp((a + b) / 2, 0) + DOWN * 0.22)
+                           for m, a, b in zip(months, starts[:-1], starts[1:])])
+        steps = [cp(0, 0)]
+        for d, v in enumerate(profile):
+            steps += [cp(d, v), cp(d + 1, v)]
+        steps.append(cp(_SEASON_DAYS, 0))
+        curve = VMobject(color=PURPLE, stroke_width=2).set_points_as_corners(steps[1:-1])
+
+        day = ValueTracker(0.0)
+
+        def filled_area():
+            x = max(0.001, day.get_value())
+            n = int(x)
+            pts = [cp(0, 0)]
+            for d in range(min(n, _SEASON_DAYS)):
+                pts += [cp(d, profile[d]), cp(d + 1, profile[d])]
+            if n < _SEASON_DAYS:
+                pts += [cp(n, profile[n]), cp(x, profile[n])]
+            pts.append(cp(x, 0))
+            return Polygon(*pts, stroke_width=0, fill_color=PURPLE, fill_opacity=0.45)
+
+        def gt_now():
+            x = day.get_value()
+            n = int(x)
+            return float(profile[:n].sum() + (profile[n] * (x - n) if n < _SEASON_DAYS else 0.0))
+
+        area = always_redraw(filled_area)
+        gt_def = math_label(r"G_{\mathrm{t}} = \Sigma\,(\theta_{\mathrm{i}} - \theta_{\mathrm{e}}) \cdot 1\,\mathrm{d}",
+                            np.array([2.35, 0.35, 0.0]), size=22, color=PURPLE, edge="left")
+        d_read = math_readout(lambda: rf"\mathrm{{Tag}}\; {int(day.get_value())}\; \text{{von}}\; {_SEASON_DAYS}",
+                              np.array([2.35, -0.35, 0.0]), size=20, color=GREY_A)
+        gt_read = math_readout(lambda: rf"G_{{\mathrm{{t}}}} \approx {de_num(round(gt_now(), -1))}\,\mathrm{{K\,d/a}}",
+                               np.array([2.35, -1.05, 0.0]), size=24, color=PURPLE)
+
+        self.play(FadeOut(VGroup(wall_icon, window_icon, ht_read, hv_read, climate_label)), run_time=0.6)
+        self.play(GrowArrow(x_axis), GrowArrow(y_axis), FadeIn(y_name), FadeIn(y_ticks), FadeIn(m_marks),
+                  FadeIn(m_names), Create(curve), FadeIn(gt_def), run_time=1.6)
+        self.add(area, d_read, gt_read)
+        self.play(day.animate.set_value(_SEASON_DAYS), run_time=4.0, rate_func=linear)
+        hold_for(self, self.NARRATION, "gradtag")
+        #endregion
+
+        #region annual loss
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "annual"))
-        q_loss = Text("Q_Verlust", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        eq_2 = Text(" = ", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        l_paren = Text("(", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        h_t = Text("H_T", font_size=40, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True)
-        plus_c = Text(" + ", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        h_v = Text("H_V", font_size=40, color=DEEP_BLUE, font=BODY_FONT, disable_ligatures=True)
-        r_paren = Text(")", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        times_c = Text("·", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        g_t = Text("G_t", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
+        consolidated_eq, ce = math_row([
+            ("q", r"Q_{\mathrm{Verlust}}", WHITE), ("eq", "=", WHITE), ("lp", "(", PURPLE),
+            ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", WHITE), ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
+            ("rp", ")", PURPLE), ("times", r"\cdot", PURPLE), ("gt", r"G_{\mathrm{t}}", PURPLE),
+            ("times2", r"\cdot", PURPLE), ("hd", r"24\,\mathrm{h/d}", PURPLE),
+        ], font_size=36, buff=0.12)
+        consolidated_eq.move_to(UP * 1.35)
+        values, vi = math_row([
+            ("eq", "=", WHITE),
+            ("h", rf"({de_num(_H_T, 1)} + {de_num(_H_V, 1)})\,\mathrm{{W/K}}", WHITE),
+            ("d1", r"\cdot", WHITE), ("gt", rf"{de_num(_GT)}\,\mathrm{{K\,d/a}}", PURPLE),
+            ("d2", r"\cdot", WHITE), ("hd", r"24\,\mathrm{h/d}", WHITE),
+        ], font_size=26, buff=0.14)
+        values.move_to(UP * 0.35)
+        q = ValueTracker(0.0)
+        q_read = math_readout(
+            lambda: rf"Q_{{\mathrm{{Verlust}}}} \approx {de_num(round(q.get_value(), -2))}\,\mathrm{{kWh/a}}",
+            np.array([0.0, -0.6, 0.0]), size=34, color=WHITE, edge="center")
 
-        consolidated_eq = (
-            VGroup(
-                q_loss,
-                eq_2,
-                l_paren,
-                h_t,
-                plus_c,
-                h_v,
-                r_paren,
-                times_c,
-                g_t,
-            )
-            .arrange(RIGHT, buff=0.12)
-            .move_to(ORIGIN)
-        )
-
-        paren_terms = VGroup(
-            consolidated_eq[2],
-            consolidated_eq[3],
-            consolidated_eq[4],
-            consolidated_eq[5],
-            consolidated_eq[6],
-        )
-
-        mult_terms = VGroup(consolidated_eq[7], consolidated_eq[8])
-
+        area_static = filled_area()
+        self.remove(area)
+        self.add(area_static)
+        _freeze(gt_read)
         self.play(
-            FadeOut(wall_icon),
-            FadeOut(window_icon),
-            FadeOut(climate_label),
-            Transform(initial_eq, paren_terms),
-            Transform(multiplier_group, mult_terms),
-            FadeIn(consolidated_eq[0]),
-            FadeIn(consolidated_eq[1]),
+            ReplacementTransform(VGroup(ie["loss"], ie["eq"]), VGroup(ce["q"], ce["eq"])),
+            ReplacementTransform(VGroup(mg["ht"], mg["plus"], mg["hv"]), VGroup(ce["ht"], ce["plus"], ce["hv"])),
+            ReplacementTransform(ie["t"], ce["lp"]),
+            ReplacementTransform(ie["v"], ce["rp"]),
+            ReplacementTransform(mg["arrow"], ce["times"]),
+            FadeOut(ie["plus"]),
+            ReplacementTransform(area_static, ce["gt"]),
+            FadeOut(VGroup(x_axis, y_axis, y_name, y_ticks, m_marks, m_names, curve, gt_def, d_read)),
             run_time=2.5,
         )
-        self.wait(1)
+        self.remove(initial_eq, multiplier_group)
+        self.play(FadeIn(VGroup(ce["times2"], ce["hd"]), shift=LEFT * 0.2), run_time=0.8)
+        self.play(FadeIn(VGroup(vi["eq"], vi["h"], vi["d1"], vi["d2"], vi["hd"])),
+                  ReplacementTransform(gt_read, vi["gt"]), run_time=1.2)
+        self.add(q_read)
+        self.play(q.animate.set_value(_Q_LOSS), run_time=2.2)
 
-        final_eq_group = VGroup(
-            consolidated_eq[0], consolidated_eq[1], initial_eq, multiplier_group
-        )
-
-        unit_text = Text(
-            "Jahres-Wärmeverlust [kWh/a]  —  G_t Gradtagzahl (DIN 4108-6 / DIN V 18599-2)",
-            font_size=16, color=GREY_A,
-            font=BODY_FONT, disable_ligatures=True)
-
-        self.play(
-            final_eq_group.animate.move_to(UP * 0.5), run_time=1.5
-        )
-
-        unit_text.next_to(final_eq_group, DOWN, buff=0.4)
+        unit_text = _label("Jahres-Wärmeverlust in kWh/a  —  Gradtagzahl nach DIN 4108-6 / DIN V 18599-2",
+                           color=GREY_A).move_to(DOWN * 1.45)
         self.play(FadeIn(unit_text), run_time=1)
 
-        hold_for(self, self.NARRATION, "annual", used=0.35 + 2.5 + 1 + 1.5 + 1)
+        hold_for(self, self.NARRATION, "annual")
         self.play(FadeOut(caption), run_time=0.3)
+        #endregion
 
 
 class ReviewingHeatGains(Scene):
     NARRATION = [
         ("intro",
-         "Losses are only half the story — free heat also arrives inside the building.",
-         "Verluste sind nur die halbe Geschichte — freie Wärme kommt auch ins Gebäude hinein."),
+         "The losses are offset by free heat gains inside the building.",
+         "Den Verlusten stehen freie Wärmegewinne im Gebäude gegenüber."),
         ("solar",
-         "From the solar chapter: winter sun through the windows is Phi sol, and over the season that power integrates to Q sol.",
-         "Aus dem Solar-Kapitel: Wintersonne durch die Fenster ist Phi-sol — über die Saison integriert wird daraus Q-sol."),
+         "From module 5: winter sun through the windows is Phi sol; over the heating season it adds up to Q sol.",
+         "Aus Modul 5: Wintersonne durch die Fenster ist Phi-sol — über die Heizperiode summiert sich das zu Q-sol, rund 3 000 kWh pro Jahr."),
         ("internal",
-         "From the internal-gains chapter: people, devices, and lights are Phi int; over the year they become Q int.",
-         "Aus dem Kapitel interne Gewinne: Personen, Geräte und Licht sind Phi-int — über das Jahr werden sie zu Q-int."),
+         "From module 4: people, devices and lights are Phi int; over the season they become Q int.",
+         "Aus Modul 4: Personen, Geräte und Licht sind Phi-int — über die Heizperiode werden daraus Q-int, rund 2 000 kWh pro Jahr."),
         ("total",
          "Together they form the gross heat gain Q Gewinn — free energy we can still use.",
-         "Zusammen bilden sie den Brutto-Wärmegewinn Q-Gewinn — freie Energie, die wir noch nutzen können."),
+         "Zusammen bilden sie den Brutto-Wärmegewinn Q-Gewinn von 5 000 kWh pro Jahr — freie Energie, die wir noch nutzen können."),
     ]
 
     def construct(self):
@@ -390,80 +519,75 @@ class ReviewingHeatGains(Scene):
         TEXT_WHITE = "#F3F4F6"
         SUBTEXT_GREY = "#9CA3AF"
 
-        # Title & Subtitle in German
         title = Text("Übersicht der Wärmegewinne", font_size=34, color=TEXT_WHITE, font=BODY_FONT, disable_ligatures=True)
         title.to_edge(UP, buff=0.6)
 
-        subtitle = Text(
-            "Kostenlose Energieeinträge ins Gebäude (DIN V 18599)",
-            font_size=18,
-            color=SUBTEXT_GREY,
-            font=BODY_FONT, disable_ligatures=True)
+        subtitle = _label("Freie Wärmegewinne (DIN V 18599)", size=18, color=SUBTEXT_GREY)
         subtitle.next_to(title, DOWN, buff=0.15)
 
-        # 1. Solar Gain Component
-        sun_center = Circle(
-            radius=0.22, color=SOLAR_YELLOW, fill_opacity=0.3, stroke_width=2
-        )
-        rays = VGroup(
-            *[
-                Line(
-                    start=np.array([np.cos(a) * 0.3, np.sin(a) * 0.3, 0]),
-                    end=np.array([np.cos(a) * 0.45, np.sin(a) * 0.45, 0]),
-                    color=SOLAR_YELLOW,
-                    stroke_width=2,
-                )
-                for a in np.linspace(0, 2 * PI, 8, endpoint=False)
-            ]
-        )
+        #region solar
+        sun_center = Circle(radius=0.22, color=SOLAR_YELLOW, fill_opacity=0.3, stroke_width=2)
+        rays = VGroup(*[
+            Line(start=np.array([np.cos(a) * 0.3, np.sin(a) * 0.3, 0]),
+                 end=np.array([np.cos(a) * 0.45, np.sin(a) * 0.45, 0]),
+                 color=SOLAR_YELLOW, stroke_width=2)
+            for a in np.linspace(0, 2 * PI, 8, endpoint=False)
+        ])
         sun_icon = VGroup(sun_center, rays)
 
-        solar_text = Text(
-            "Φ_sol = G · A · F_f · g · F_sh", font_size=24, color=SOLAR_YELLOW
-        , font=BODY_FONT, disable_ligatures=True)
-        solar_label = Text(
-            "Solarer Wärmegewinn (DIN V 18599-2)", font_size=15, color=SOLAR_YELLOW
-        , font=BODY_FONT, disable_ligatures=True)
+        solar_text = math_label(
+            r"\Phi_{\mathrm{sol}} = G \cdot A \cdot F_{\mathrm{f}} \cdot g \cdot F_{\mathrm{sh}}",
+            size=24, color=SOLAR_YELLOW)
+        solar_label = _label("Solarer Wärmegewinn (DIN V 18599-2)", size=15, color=SOLAR_YELLOW)
         solar_label.next_to(solar_text, DOWN, aligned_edge=LEFT, buff=0.1)
+        solar_slot = math_label(rf"Q_{{\mathrm{{sol}}}} \approx {de_num(_Q_SOL)}\,\mathrm{{kWh/a}}", size=24)
+        solar_slot.next_to(solar_label, DOWN, aligned_edge=LEFT, buff=0.18)
         solar_eq_group = VGroup(solar_text, solar_label)
 
-        solar_group = VGroup(sun_icon, solar_eq_group).arrange(RIGHT, buff=0.4)
-        solar_group.move_to(RIGHT * 1.5 + UP * 1.2)
+        solar_group = VGroup(sun_icon, VGroup(solar_eq_group, solar_slot)).arrange(RIGHT, buff=0.4)
+        solar_group.move_to(RIGHT * 1.5 + UP * 0.95)
+        #endregion
 
-        # 2. Internal Gain Component
-        head = Circle(
-            radius=0.12, color=INT_ORANGE, fill_opacity=0.4, stroke_width=2
-        ).shift(UP * 0.15)
-        torso = Arc(
-            radius=0.28,
-            start_angle=PI * 0.15,
-            angle=PI * 0.7,
-            color=INT_ORANGE,
-            stroke_width=2,
-        )
+        #region internal
+        head = Circle(radius=0.12, color=INT_ORANGE, fill_opacity=0.4, stroke_width=2).shift(UP * 0.15)
+        torso = Arc(radius=0.28, start_angle=PI * 0.15, angle=PI * 0.7, color=INT_ORANGE, stroke_width=2)
         torso.rotate(PI)
         person_icon = VGroup(head, torso)
 
-        int_text = Text(
-            "Φ_int = Φ_p + Φ_e + Φ_l", font_size=24, color=INT_ORANGE
-        , font=BODY_FONT, disable_ligatures=True)
-        int_label = Text(
-            "Interner Wärmegewinn (DIN V 18599-10)", font_size=15, color=INT_ORANGE
-        , font=BODY_FONT, disable_ligatures=True)
+        int_text = math_label(
+            r"\Phi_{\mathrm{int}} = \Phi_{\mathrm{p}} + \Phi_{\mathrm{e}} + \Phi_{\mathrm{l}}",
+            size=24, color=INT_ORANGE)
+        int_label = _label("Interner Wärmegewinn (DIN V 18599-10)", size=15, color=INT_ORANGE)
         int_label.next_to(int_text, DOWN, aligned_edge=LEFT, buff=0.1)
+        int_slot = math_label(rf"Q_{{\mathrm{{int}}}} \approx {de_num(_Q_INT)}\,\mathrm{{kWh/a}}", size=24)
+        int_slot.next_to(int_label, DOWN, aligned_edge=LEFT, buff=0.18)
         int_eq_group = VGroup(int_text, int_label)
 
-        internal_group = VGroup(person_icon, int_eq_group).arrange(RIGHT, buff=0.4)
-        internal_group.move_to(RIGHT * 1.5 + DOWN * 1.2)
+        internal_group = VGroup(person_icon, VGroup(int_eq_group, int_slot)).arrange(RIGHT, buff=0.4)
+        internal_group.move_to(RIGHT * 1.5 + DOWN * 1.15)
+        internal_group.align_to(solar_group, LEFT)
+        #endregion
 
-        # 3. Combined Total Variable Setup
+        #region total
         gains_vgroup = VGroup(solar_group, internal_group)
         brace = Brace(gains_vgroup, direction=LEFT, color=TEXT_WHITE, buff=0.3)
 
-        q_gain_main = Text("Q_Gewinn", font_size=38, color=TEXT_WHITE, font=BODY_FONT, disable_ligatures=True)
-        q_gain_sub = Text("Brutto-Gesamtwärmegewinn", font_size=16, color=SUBTEXT_GREY, font=BODY_FONT, disable_ligatures=True)
-        q_gain_box = VGroup(q_gain_main, q_gain_sub).arrange(DOWN, buff=0.12)
+        q_gain_main = math_label(r"Q_{\mathrm{Gewinn}}", size=38, color=TEXT_WHITE)
+        q_gain_sub = _label("Brutto-Gesamtwärmegewinn", color=SUBTEXT_GREY)
+        q_gain_slot = math_label(rf"= {de_num(_Q_GAIN)}\,\mathrm{{kWh/a}}", size=28)
+        q_gain_box = VGroup(q_gain_main, q_gain_sub, q_gain_slot).arrange(DOWN, buff=0.14)
         q_gain_box.next_to(brace, LEFT, buff=0.3)
+        #endregion
+
+        q_sol = ValueTracker(0.0)
+        q_int = ValueTracker(0.0)
+        q_tot = ValueTracker(0.0)
+        sol_read = math_readout(lambda: rf"Q_{{\mathrm{{sol}}}} \approx {de_num(q_sol.get_value())}\,\mathrm{{kWh/a}}",
+                                _slot(solar_slot), size=24, color=SOLAR_YELLOW)
+        int_read = math_readout(lambda: rf"Q_{{\mathrm{{int}}}} \approx {de_num(q_int.get_value())}\,\mathrm{{kWh/a}}",
+                                _slot(int_slot), size=24, color=INT_ORANGE)
+        tot_read = math_readout(lambda: rf"= {de_num(q_tot.get_value())}\,\mathrm{{kWh/a}}",
+                                _slot(q_gain_slot), size=28, color=TEXT_WHITE)
 
         self.play(Write(title), FadeIn(subtitle, shift=DOWN * 0.2), run_time=1.5)
         hold_for(self, self.NARRATION, "intro", used=0.3 + 1.5)
@@ -474,7 +598,9 @@ class ReviewingHeatGains(Scene):
             FadeIn(solar_eq_group, shift=RIGHT * 0.3),
             run_time=2.0,
         )
-        hold_for(self, self.NARRATION, "solar", used=0.35 + 2.0)
+        self.add(sol_read)
+        self.play(q_sol.animate.set_value(_Q_SOL), Rotate(rays, PI / 2), run_time=2.0)
+        hold_for(self, self.NARRATION, "solar")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "internal"))
         self.play(
@@ -482,7 +608,9 @@ class ReviewingHeatGains(Scene):
             FadeIn(int_eq_group, shift=RIGHT * 0.3),
             run_time=2.0,
         )
-        hold_for(self, self.NARRATION, "internal", used=0.35 + 2.0)
+        self.add(int_read)
+        self.play(q_int.animate.set_value(_Q_INT), Indicate(person_icon, color=INT_ORANGE), run_time=2.0)
+        hold_for(self, self.NARRATION, "internal")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "total"))
         self.play(Create(brace), run_time=1.5)
@@ -490,6 +618,11 @@ class ReviewingHeatGains(Scene):
         self.play(
             FadeIn(q_gain_main), FadeIn(q_gain_sub, shift=LEFT * 0.2), run_time=1.5
         )
+        flying = [_freeze(sol_read).copy(), _freeze(int_read).copy()]
+        self.add(tot_read, *flying)
+        self.play(*[f.animate.move_to(q_gain_slot).set_opacity(0.0) for f in flying],
+                  q_tot.animate.set_value(_Q_GAIN), run_time=1.8)
+        self.remove(*flying)
 
         self.play(
             q_gain_main.animate.set_color(SOLAR_YELLOW),
@@ -502,18 +635,30 @@ class ReviewingHeatGains(Scene):
             run_time=0.5,
         )
 
-        hold_for(self, self.NARRATION, "total", used=0.35 + 1.5 + 1.5 + 0.5 + 0.5)
+        hold_for(self, self.NARRATION, "total")
         self.play(FadeOut(caption), run_time=0.3)
 
 
 class Scene4(Scene):
     NARRATION = [
+        ("day",
+         "A clear winter day: the house loses heat around the clock, while sun and occupants deliver gains mostly at midday.",
+         "Ein klarer Wintertag: Das Haus verliert rund um die Uhr Wärme, Sonne und Bewohner liefern Gewinne vor allem mittags."),
         ("overheat",
-         "But not every free watt helps: surplus gains overheat the room and then escape unused.",
-         "Doch nicht jedes freie Watt hilft: überschüssige Gewinne überhitzen den Raum und entweichen ungenutzt."),
+         "Gains below the loss curve replace heating. The part above overheats the room and escapes unused.",
+         "Gewinne unter der Verlustkurve ersetzen Heizwärme. Der Teil darüber überhitzt den Raum und entweicht ungenutzt."),
+        ("ratio",
+         "Eta h is the green area divided by all gains — here about 0.90.",
+         "Eta-h ist die grüne Fläche geteilt durch alle Gewinne — hier rund 0,90."),
+        ("mass",
+         "Heavier thermal mass stores the surplus and releases it in the evening: the red area shrinks and eta h rises.",
+         "Mehr speicherfähige Masse nimmt den Überschuss auf und gibt ihn abends ab: Die rote Fläche schrumpft, Eta-h steigt auf rund 0,97."),
+        ("house",
+         "Our example house is calculated with eta h of about 0.90.",
+         "Unser Beispielhaus rechnen wir mit Eta-h von rund 0,90."),
         ("formula",
          "So we keep only the useful share: Q nutz equals eta h times solar plus internal gains.",
-         "Deshalb behalten wir nur den nutzbaren Anteil: Q-nutz ist Eta-h mal solare plus interne Gewinne."),
+         "Deshalb behalten wir nur den nutzbaren Anteil: Q-nutz ist Eta-h mal solare plus interne Gewinne, also 4 500 kWh pro Jahr."),
         ("eta",
          "Eta h is the utilization factor — how much of those free gains actually cuts the heating demand.",
          "Eta-h ist der Ausnutzungsgrad — wie viel dieser freien Gewinne den Heizwärmebedarf wirklich senkt."),
@@ -522,181 +667,222 @@ class Scene4(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        caption = caption_bar(subtitle_text(self.NARRATION, "overheat"))
+        caption = caption_bar(subtitle_text(self.NARRATION, "day"))
         self.play(FadeIn(caption), run_time=0.3)
 
         title = Text("Der Ausnutzungsgrad der Wärmegewinne", font_size=28, color=WHITE, font=BODY_FONT, disable_ligatures=True)
         title.to_edge(UP, buff=0.5)
         self.add(title)
 
-        bulb_center = DOWN * 0.6
-        bulb_outer = Circle(radius=0.55, color=WHITE, stroke_width=3).move_to(
-            bulb_center
+        GREEN = "#10B981"
+        RED = "#EF4444"
+        LOSS_BLUE = "#38BDF8"
+        GAIN_YELLOW = "#FDE047"
+
+        #region day chart
+        O = np.array([-6.1, -1.75, 0.0])
+        XL, YL, PMAX = 7.2, 3.3, 5.0
+
+        def cp(hour, kw):
+            return O + RIGHT * (hour / 24.0 * XL) + UP * (kw / PMAX * YL)
+
+        x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
+                       tip_length=0.15, max_tip_length_to_length_ratio=0.05)
+        y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=P_WHITE,
+                       tip_length=0.15, max_tip_length_to_length_ratio=0.08)
+        x_name = math_label(r"t\;[\mathrm{h}]", size=LABEL_FONT_SIZE).next_to(x_axis.get_end(), DOWN, buff=0.14)
+        x_name.align_to(x_axis.get_end(), RIGHT)
+        y_name = math_label(r"P\;[\mathrm{kW}]", size=LABEL_FONT_SIZE).next_to(y_axis.get_end(), RIGHT, buff=0.14)
+        x_ticks = VGroup(*[
+            VGroup(Line(cp(h, 0) + DOWN * 0.06, cp(h, 0) + UP * 0.06, color=P_WHITE, stroke_width=2),
+                   math_label(str(h), cp(h, 0) + DOWN * 0.3, size=15))
+            for h in (6, 12, 18)
+        ])
+        y_ticks = VGroup(*[
+            VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=P_WHITE, stroke_width=2),
+                   math_label(str(k), cp(0, k) + LEFT * 0.14 + DOWN * 0.07, size=15, edge="right"))
+            for k in (2, 4)
+        ])
+        axes = VGroup(x_axis, y_axis, x_name, y_name, x_ticks, y_ticks)
+
+        loss = _loss_kw(_DAY_T)
+        loss_curve = VMobject(color=LOSS_BLUE, stroke_width=3).set_points_smoothly(
+            [cp(h, p) for h, p in zip(_DAY_T[::4], loss[::4])])
+        mass = ValueTracker(0.0)
+        fill_to = ValueTracker(0.0)
+
+        def gain_now():
+            return _gain_kw(_SOLAR_PEAK, mass.get_value())
+
+        def gain_curve():
+            g = gain_now()
+            return VMobject(color=GAIN_YELLOW, stroke_width=3).set_points_as_corners(
+                [cp(h, p) for h, p in zip(_DAY_T, g)])
+
+        def band(upper, lower, color):
+            cut = _DAY_T <= fill_to.get_value() + 1e-9
+            if cut.sum() < 2:
+                return VMobject()
+            hs = _DAY_T[cut]
+            top = [cp(h, p) for h, p in zip(hs, upper[cut])]
+            bottom = [cp(h, p) for h, p in zip(hs[::-1], lower[cut][::-1])]
+            return Polygon(*top, *bottom, stroke_width=0, fill_color=color, fill_opacity=0.55)
+
+        def green_area():
+            return band(np.minimum(gain_now(), loss), np.zeros_like(loss), GREEN)
+
+        def red_area():
+            g = gain_now()
+            return band(np.maximum(g, loss), loss, RED)
+
+        gains = always_redraw(gain_curve)
+        green = always_redraw(green_area)
+        red = always_redraw(red_area)
+        #endregion
+
+        #region legend and readouts
+        LX = 1.75
+        legend = VGroup(
+            VGroup(Line(ORIGIN, RIGHT * 0.4, color=LOSS_BLUE, stroke_width=3),
+                   _label("Wärmeverlust des Hauses", color=LOSS_BLUE)),
+            VGroup(Line(ORIGIN, RIGHT * 0.4, color=GAIN_YELLOW, stroke_width=3),
+                   _label("Gewinne: Sonne + intern", color=GAIN_YELLOW)),
+            VGroup(Square(0.22, stroke_width=0, fill_color=GREEN, fill_opacity=0.7),
+                   _label("genutzt, ersetzt Heizwärme", color=GREEN)),
+            VGroup(Square(0.22, stroke_width=0, fill_color=RED, fill_opacity=0.7),
+                   _label("Überschuss: überhitzt, geht verloren", color=RED)),
         )
-        stem_outer = Rectangle(width=0.45, height=2.6, color=WHITE, stroke_width=3)
-        stem_outer.next_to(bulb_outer, UP, buff=-0.15)
+        for row in legend:
+            row.arrange(RIGHT, buff=0.15)
+        legend.arrange(DOWN, aligned_edge=LEFT, buff=0.16).move_to(np.array([LX, 1.45, 0.0]), aligned_edge=LEFT)
+        legend.shift(UP * (1.75 - legend.get_top()[1]))
 
-        mercury_bulb = Circle(radius=0.45, color="#FDE047", fill_opacity=1.0).move_to(
-            bulb_center
-        )
+        def util():
+            return _utilization(_SOLAR_PEAK, mass.get_value(), fill_to.get_value())
 
-        mercury_start = Line(
-            start=bulb_center,
-            end=bulb_center + UP * 0.8,
-            stroke_width=16,
-            color="#FDE047",
-        )
-        mercury_top = Line(
-            start=bulb_center,
-            end=stem_outer.get_top() + DOWN * 0.15,
-            stroke_width=16,
-            color="#EF4444",
-        )
+        a_gain_read = math_readout(
+            lambda: rf"A_{{\mathrm{{Gewinn}}}} = {de_num(util()[1], 1)}\,\mathrm{{kWh}}",
+            np.array([LX, -0.3, 0.0]), size=22, color=GAIN_YELLOW)
+        a_used_read = math_readout(
+            lambda: rf"A_{{\mathrm{{nutz}}}} = {de_num(util()[0], 1)}\,\mathrm{{kWh}}",
+            np.array([LX, -0.82, 0.0]), size=22, color=GREEN)
+        eta_read = math_readout(
+            lambda: rf"\eta_{{\mathrm{{h}}}} = \frac{{A_{{\mathrm{{nutz}}}}}}{{A_{{\mathrm{{Gewinn}}}}}} = "
+                    rf"{de_num(util()[2], 2)}",
+            np.array([LX, -1.58, 0.0]), size=26, color=GREEN)
+        mass_tag = _label("leichte Bauweise", size=18, color=GREY_A).move_to(np.array([LX, 0.14, 0.0]), aligned_edge=LEFT)
+        #endregion
 
-        red_zone = Rectangle(
-            width=0.65, height=0.7, color="#EF4444", fill_opacity=0.35, stroke_width=1.5
-        )
-        red_zone.move_to(stem_outer.get_top() + DOWN * 0.45)
+        self.play(FadeIn(axes), Create(loss_curve), run_time=1.4)
+        gain_static = gain_curve()
+        self.play(Create(gain_static), FadeIn(legend[:2]), run_time=1.4)
+        self.remove(gain_static)
+        self.add(gains)
+        hold_for(self, self.NARRATION, "day", used=0.3 + 1.4 + 1.4)
 
-        red_zone_label = Text("Überhitzungsbereich", font_size=18, color="#EF4444", font=BODY_FONT, disable_ligatures=True)
-        red_zone_label.next_to(red_zone, RIGHT, buff=0.35)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "overheat"))
+        self.add(green, red)
+        self.bring_to_front(loss_curve, gains)
+        self.play(FadeIn(legend[2:]), run_time=0.6)
+        self.add(a_gain_read, a_used_read, eta_read)
+        self.play(fill_to.animate.set_value(24.0), run_time=4.5, rate_func=linear)
+        hold_for(self, self.NARRATION, "overheat")
 
-        warning_text = Text(
-            "Nicht nutzbare / überschüssige Wärme!", font_size=20, color="#EF4444"
-        , font=BODY_FONT, disable_ligatures=True)
-        warning_text.next_to(bulb_outer, DOWN, buff=0.4)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "ratio"))
+        self.play(Circumscribe(eta_read, color=GREEN), run_time=1.2)
+        hold_for(self, self.NARRATION, "ratio")
 
-        self.play(
-            Create(bulb_outer),
-            Create(stem_outer),
-            FadeIn(mercury_bulb),
-            Create(mercury_start),
-            run_time=1.2,
-        )
-        self.play(FadeIn(red_zone), FadeIn(red_zone_label), run_time=0.8)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "mass"))
+        heavy_tag = _label("schwere Bauweise, viel Speichermasse", size=18, color=GREY_A).move_to(mass_tag, aligned_edge=LEFT)
+        self.play(FadeIn(mass_tag), run_time=0.4)
+        self.play(mass.animate.set_value(1.0), Transform(mass_tag, heavy_tag), run_time=3.5)
+        hold_for(self, self.NARRATION, "mass")
 
-        self.play(
-            Transform(mercury_start, mercury_top),
-            mercury_bulb.animate.set_color("#EF4444"),
-            run_time=1.8,
-        )
-        self.play(FadeIn(warning_text), run_time=0.8)
-        hold_for(self, self.NARRATION, "overheat", used=0.3 + 1.2 + 0.8 + 1.8 + 0.8)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "house"))
+        light_tag = _label("Beispielhaus, mittlere Bauweise", size=18, color=GREY_A).move_to(mass_tag, aligned_edge=LEFT)
+        self.play(mass.animate.set_value(0.0), Transform(mass_tag, light_tag), run_time=2.5)
+        hold_for(self, self.NARRATION, "house")
 
-        thermo_group = VGroup(
-            bulb_outer,
-            stem_outer,
-            mercury_bulb,
-            mercury_start,
-            red_zone,
-            red_zone_label,
-            warning_text,
-        )
-        self.play(FadeOut(thermo_group), run_time=0.8)
-
-        # Part 2: Algebraic Insertion of eta_h
+        #region formula
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        q_gain_lbl = Text("Q_Gewinn", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        eq_sign = Text(" = ", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        q_solar = Text("Q_sol", font_size=38, color="#FDE047", font=BODY_FONT, disable_ligatures=True)
-        plus_sign = Text(" + ", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        q_int = Text("Q_int", font_size=38, color="#F97316", font=BODY_FONT, disable_ligatures=True)
+        green_static = green_area()
+        self.remove(green)
+        self.add(green_static)
+        self.play(FadeOut(VGroup(axes, loss_curve, gains, red, legend, a_gain_read, a_used_read, eta_read, mass_tag)),
+                  run_time=0.8)
 
-        initial_eq = VGroup(q_gain_lbl, eq_sign, q_solar, plus_sign, q_int)
-        initial_eq.arrange(RIGHT, buff=0.15).move_to(UP * 0.8)
+        initial_eq, ie = math_row([
+            ("q", r"Q_{\mathrm{Gewinn}}", WHITE), ("eq", "=", WHITE), ("sol", r"Q_{\mathrm{sol}}", "#FDE047"),
+            ("plus", "+", WHITE), ("int", r"Q_{\mathrm{int}}", "#F97316"),
+        ], font_size=38, buff=0.15)
+        initial_eq.move_to(UP * 1.1)
 
         self.play(FadeIn(initial_eq), run_time=1.2)
         self.wait(0.6)
 
-        q_useful_lbl = Text("Q_nutz", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        eta_ht = Text("η_h", font_size=42, color="#10B981", font=BODY_FONT, disable_ligatures=True)
-        dot_sym = Text(" · ", font_size=38, color="#10B981", font=BODY_FONT, disable_ligatures=True)
-        l_paren = Text("(", font_size=44, color="#10B981", font=BODY_FONT, disable_ligatures=True)
-        r_paren = Text(")", font_size=44, color="#10B981", font=BODY_FONT, disable_ligatures=True)
-
-        eq_sign_target = Text(" = ", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        q_solar_target = Text("Q_sol", font_size=38, color="#FDE047", font=BODY_FONT, disable_ligatures=True)
-        plus_sign_target = Text(" + ", font_size=38, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        q_int_target = Text("Q_int", font_size=38, color="#F97316", font=BODY_FONT, disable_ligatures=True)
-
-        target_group = (
-            VGroup(
-                q_useful_lbl,
-                eq_sign_target,
-                eta_ht,
-                dot_sym,
-                l_paren,
-                q_solar_target,
-                plus_sign_target,
-                q_int_target,
-                r_paren,
-            )
-            .arrange(RIGHT, buff=0.12)
-            .move_to(UP * 0.8)
-        )
+        target_group, tg = math_row([
+            ("q", r"Q_{\mathrm{nutz}}", WHITE), ("eq", "=", WHITE), ("eta", r"\eta_{\mathrm{h}}", GREEN),
+            ("dot", r"\cdot", GREEN), ("lp", "(", GREEN), ("sol", r"Q_{\mathrm{sol}}", "#FDE047"),
+            ("plus", "+", WHITE), ("int", r"Q_{\mathrm{int}}", "#F97316"), ("rp", ")", GREEN),
+        ], font_size=38, buff=0.12)
+        target_group.move_to(UP * 1.1)
 
         self.play(
-            Transform(q_gain_lbl, q_useful_lbl),
-            eq_sign.animate.move_to(eq_sign_target),
-            q_solar.animate.move_to(q_solar_target),
-            plus_sign.animate.move_to(plus_sign_target),
-            q_int.animate.move_to(q_int_target),
+            Transform(ie["q"], tg["q"]),
+            ie["eq"].animate.move_to(tg["eq"]),
+            ie["sol"].animate.move_to(tg["sol"]),
+            ie["plus"].animate.move_to(tg["plus"]),
+            ie["int"].animate.move_to(tg["int"]),
             run_time=1.2,
         )
 
         self.play(
-            FadeIn(eta_ht, shift=DOWN * 0.2),
-            FadeIn(dot_sym),
-            FadeIn(l_paren, shift=RIGHT * 0.1),
-            FadeIn(r_paren, shift=LEFT * 0.1),
-            run_time=1.2,
+            ReplacementTransform(green_static, tg["eta"]),
+            FadeIn(tg["dot"]),
+            FadeIn(tg["lp"], shift=RIGHT * 0.1),
+            FadeIn(tg["rp"], shift=LEFT * 0.1),
+            run_time=1.6,
         )
-        hold_for(self, self.NARRATION, "formula", used=0.35 + 0.8 + 1.2 + 0.6 + 1.2 + 1.2)
+        q_use = ValueTracker(0.0)
+        use_read = math_readout(
+            lambda: rf"Q_{{\mathrm{{nutz}}}} = {de_num(_ETA, 2)} \cdot {de_num(_Q_GAIN)}\,\mathrm{{kWh/a}} = "
+                    rf"{de_num(q_use.get_value())}\,\mathrm{{kWh/a}}",
+            np.array([0.0, 0.05, 0.0]), size=28, color=WHITE, edge="center")
+        self.add(use_read)
+        self.play(q_use.animate.set_value(_Q_USE), run_time=2.0)
+        hold_for(self, self.NARRATION, "formula")
+        #endregion
 
-        # Part 3: Explanation & Focus on Ausnutzungsgrad (DIN V 18599-2)
+        #region explanation
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "eta"))
-        eta_box = SurroundingRectangle(
-            eta_ht, color="#10B981", buff=0.12, corner_radius=0.1
-        )
+        eta_box = SurroundingRectangle(tg["eta"], color=GREEN, buff=0.12, corner_radius=0.1)
 
-        eta_title = Text(
-            "η_h : Ausnutzungsgrad der Wärmegewinne (DIN V 18599-2)",
-            font_size=22,
-            color="#10B981",
-            font=BODY_FONT, disable_ligatures=True)
-        eta_title.move_to(DOWN * 0.6)
+        eta_title = VGroup(
+            math_label(r"\eta_{\mathrm{h}}\text{:}", size=22, color=GREEN),
+            _label("Ausnutzungsgrad der Wärmegewinne (DIN V 18599-2)", size=22, color=GREEN),
+        ).arrange(RIGHT, buff=0.12, aligned_edge=DOWN)
+        eta_title.move_to(DOWN * 0.8)
 
-        eta_line1 = Text(
-            "Gibt den Anteil der Wärmegewinne an (0 bis 100%),",
-            font_size=18,
-            color=GREY_A,
-            font=BODY_FONT, disable_ligatures=True)
-        eta_line2 = Text(
-            "der tatsächlich zur Deckung des Heizwärmebedarfs beiträgt.",
-            font_size=18,
-            color=GREY_A,
-            font=BODY_FONT, disable_ligatures=True)
-        eta_desc = (
-            VGroup(eta_line1, eta_line2)
-            .arrange(DOWN, buff=0.12)
-            .next_to(eta_title, DOWN, buff=0.3)
-        )
+        eta_line1 = _label("Gibt den Anteil der Wärmegewinne an (0 bis 100 %),", size=18)
+        eta_line2 = _label("der tatsächlich zur Deckung des Heizwärmebedarfs beiträgt.", size=18)
+        eta_desc = VGroup(eta_line1, eta_line2).arrange(DOWN, buff=0.12).next_to(eta_title, DOWN, buff=0.3)
 
         self.play(Create(eta_box), FadeIn(eta_title), run_time=1.0)
         self.play(FadeIn(eta_desc, shift=UP * 0.15), run_time=1.0)
 
-        hold_for(self, self.NARRATION, "eta", used=0.35 + 1.0 + 1.0)
+        hold_for(self, self.NARRATION, "eta")
         self.play(FadeOut(caption), run_time=0.3)
+        #endregion
 
 
 class UltimateEnergyBalance(Scene):
     NARRATION = [
         ("balance",
-         "Now close the story: losses leave the house, useful gains stay — that balance sets the heating demand.",
-         "Jetzt schließen wir die Geschichte: Verluste gehen hinaus, nutzbare Gewinne bleiben — diese Bilanz setzt den Heizbedarf."),
+         "Balance: losses leave the house, useful gains stay — the difference is the heating demand.",
+         "Bilanz: Verluste gehen hinaus, nutzbare Gewinne bleiben — die Differenz ist der Heizwärmebedarf."),
         ("master",
-         "Heating demand Q h equals the losses we built minus eta h times the gains we gathered.",
-         "Heizwärmebedarf Q-h ist die Verluste, die wir gebaut haben, minus Eta-h mal die Gewinne, die wir gesammelt haben."),
+         "Heating demand Q h equals Q Verlust minus eta h times Q Gewinn: 16,000 minus 4,500 is about 11,500 kilowatt-hours per year.",
+         "Heizwärmebedarf Q-h ist Q-Verlust minus Eta-h mal Q-Gewinn: 16 000 minus 4 500 ergibt rund 11 500 kWh pro Jahr."),
         ("expand",
          "Expanded: transmission energy plus ventilation energy, minus eta h times solar plus internal energy.",
          "Ausgeschrieben: Transmissionsenergie plus Lüftungsenergie, minus Eta-h mal Solar plus intern."),
@@ -717,128 +903,401 @@ class UltimateEnergyBalance(Scene):
         self.play(Write(title))
         self.wait(0.5)
 
+        LOSS_C, ETA_C, GAIN_C, QH_C = "#3B82F6", "#22C55E", "#EAB308", "#EF4444"
         P = DOWN * 0.5
 
-        fulcrum = Polygon(
-            P,
-            P + DOWN * 1.2 + LEFT * 0.6,
-            P + DOWN * 1.2 + RIGHT * 0.6,
-            color=GREY,
-            fill_opacity=0.5,
-        )
-        base = Line(
-            P + DOWN * 1.2 + LEFT * 1.2,
-            P + DOWN * 1.2 + RIGHT * 1.2,
-            color=GREY,
-            stroke_width=4,
-        )
-
+        #region balance beam
+        fulcrum = Polygon(P, P + DOWN * 1.2 + LEFT * 0.6, P + DOWN * 1.2 + RIGHT * 0.6, color=GREY, fill_opacity=0.5)
+        base = Line(P + DOWN * 1.2 + LEFT * 1.2, P + DOWN * 1.2 + RIGHT * 1.2, color=GREY, stroke_width=4)
         beam = Line(P + LEFT * 2.2, P + RIGHT * 2.2, color=WHITE, stroke_width=5)
-
-        left_string = Line(
-            P + LEFT * 2.2, P + LEFT * 2.2 + DOWN * 1.2, color=GREY_B, stroke_width=2
-        )
-        left_plate = Line(
-            P + LEFT * 2.8 + DOWN * 1.2,
-            P + LEFT * 1.6 + DOWN * 1.2,
-            color=WHITE,
-            stroke_width=4,
-        )
+        left_string = Line(P + LEFT * 2.2, P + LEFT * 2.2 + DOWN * 1.2, color=GREY_B, stroke_width=2)
+        left_plate = Line(P + LEFT * 2.8 + DOWN * 1.2, P + LEFT * 1.6 + DOWN * 1.2, color=WHITE, stroke_width=4)
         left_pan = VGroup(left_string, left_plate)
-
-        right_string = Line(
-            P + RIGHT * 2.2, P + RIGHT * 2.2 + DOWN * 1.2, color=GREY_B, stroke_width=2
-        )
-        right_plate = Line(
-            P + RIGHT * 2.8 + DOWN * 1.2,
-            P + RIGHT * 1.6 + DOWN * 1.2,
-            color=WHITE,
-            stroke_width=4,
-        )
+        right_string = Line(P + RIGHT * 2.2, P + RIGHT * 2.2 + DOWN * 1.2, color=GREY_B, stroke_width=2)
+        right_plate = Line(P + RIGHT * 2.8 + DOWN * 1.2, P + RIGHT * 1.6 + DOWN * 1.2, color=WHITE, stroke_width=4)
         right_pan = VGroup(right_string, right_plate)
-
         beam_assembly = VGroup(beam, left_pan, right_pan)
 
         self.play(Create(fulcrum), Create(base), Create(beam_assembly))
         self.wait(0.5)
+        #endregion
 
-        q_loss_tag = Text("Q_Verlust", color="#3B82F6", font_size=26, font=BODY_FONT, disable_ligatures=True)
+        #region pans
+        q_loss_tag = math_label(r"Q_{\mathrm{Verlust}}", size=26, color=LOSS_C)
         q_loss_tag.move_to(P + LEFT * 2.2 + UP * 2.0)
+        loss_v = ValueTracker(0.0)
+        loss_read = math_readout(lambda: rf"{de_num(round(loss_v.get_value(), -1))}\,\mathrm{{kWh/a}}",
+                                 lambda: q_loss_tag.get_top() + UP * 0.2, size=22, color=LOSS_C, edge="center")
 
         self.play(FadeIn(q_loss_tag, shift=DOWN))
-        self.play(q_loss_tag.animate.move_to(left_plate.get_center() + UP * 0.35))
+        self.add(loss_read)
+        self.play(q_loss_tag.animate.move_to(left_plate.get_center() + UP * 0.35),
+                  loss_v.animate.set_value(_Q_LOSS_SHOWN))
 
         scale_with_loss = VGroup(beam_assembly, q_loss_tag)
-        self.play(
-            Rotate(scale_with_loss, angle=16 * DEGREES, about_point=P, run_time=1.2)
-        )
+        self.play(Rotate(scale_with_loss, angle=16 * DEGREES, about_point=P, run_time=1.2))
         self.wait(0.5)
 
-        eta_text = Text("η_h", color="#22C55E", font_size=26, font=BODY_FONT, disable_ligatures=True)
-        times_text = Text(" · ", color=WHITE, font_size=26, font=BODY_FONT, disable_ligatures=True)
-        q_g_text = Text("Q_Gewinn", color="#EAB308", font_size=26, font=BODY_FONT, disable_ligatures=True)
-        q_gain_tag = VGroup(eta_text, times_text, q_g_text).arrange(RIGHT, buff=0.08)
+        q_gain_tag, gt = math_row([
+            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", WHITE), ("g", r"Q_{\mathrm{Gewinn}}", GAIN_C),
+        ], font_size=26, buff=0.08)
         q_gain_tag.move_to(P + RIGHT * 2.2 + UP * 2.0)
+        gain_v = ValueTracker(0.0)
+        gain_read = math_readout(lambda: rf"{de_num(round(gain_v.get_value(), -1))}\,\mathrm{{kWh/a}}",
+                                 lambda: q_gain_tag.get_top() + UP * 0.2, size=22, color=GAIN_C, edge="center")
 
         self.play(FadeIn(q_gain_tag, shift=DOWN))
-        self.play(q_gain_tag.animate.move_to(right_plate.get_center() + UP * 0.35))
+        self.add(gain_read)
+        self.play(q_gain_tag.animate.move_to(right_plate.get_center() + UP * 0.35),
+                  gain_v.animate.set_value(_Q_USE))
 
         scale_all = VGroup(scale_with_loss, q_gain_tag)
         self.play(Rotate(scale_all, angle=-10 * DEGREES, about_point=P, run_time=1.2))
         hold_for(
             self, self.NARRATION, "balance",
-            used=0.3 + 1.0 + 0.5 + 1.0 + 1.0 + 1.2 + 0.5 + 1.0 + 1.0 + 1.2,
+            used=0.3 + 1.0 + 0.5 + 1.0 + 1.0 + 1.0 + 1.2 + 0.5 + 1.0 + 1.0 + 1.2,
         )
+        #endregion
 
-        # Master Equation (German standard notation: Q_h = Q_b = Q_Verlust - eta_h * Q_Gewinn)
+        #region master equation
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "master"))
-        q_heat_text = Text("Q_h", color="#EF4444", font_size=38, weight=BOLD, font=BODY_FONT, disable_ligatures=True)
-        eq_sign = Text(" = ", color=WHITE, font_size=36, font=BODY_FONT, disable_ligatures=True)
-        q_loss_eq = Text("Q_Verlust", color="#3B82F6", font_size=34, font=BODY_FONT, disable_ligatures=True)
-        minus_sign = Text(" - ", color=WHITE, font_size=36, font=BODY_FONT, disable_ligatures=True)
-        eta_eq = Text("η_h", color="#22C55E", font_size=36, font=BODY_FONT, disable_ligatures=True)
-        dot_sign = Text(" · ", color=WHITE, font_size=36, font=BODY_FONT, disable_ligatures=True)
-        q_gain_eq = Text("Q_Gewinn", color="#EAB308", font_size=34, font=BODY_FONT, disable_ligatures=True)
+        master_eq, me = math_row([
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", WHITE), ("loss", r"Q_{\mathrm{Verlust}}", LOSS_C),
+            ("minus", "-", WHITE), ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", WHITE),
+            ("gain", r"Q_{\mathrm{Gewinn}}", GAIN_C),
+        ], font_size=36, buff=0.12)
+        master_eq.move_to(UP * 1.2)
 
-        master_eq = VGroup(
-            q_heat_text, eq_sign, q_loss_eq, minus_sign, eta_eq, dot_sign, q_gain_eq
-        ).arrange(RIGHT, buff=0.12)
-        master_eq.move_to(UP * 0.8)
+        numbers, nb = math_row([
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", WHITE), ("loss", de_num(_Q_LOSS_SHOWN), LOSS_C),
+            ("minus", "-", WHITE), ("gain", de_num(_Q_USE), GAIN_C), ("approx", r"\approx", WHITE),
+            ("slot", rf"{de_num(_Q_H)}\,\mathrm{{kWh/a}}", QH_C),
+        ], font_size=32, buff=0.14)
+        numbers.move_to(UP * 0.1)
+        q_h = ValueTracker(0.0)
+        qh_read = math_readout(lambda: rf"{de_num(round(q_h.get_value(), -1))}\,\mathrm{{kWh/a}}",
+                               _slot(nb["slot"]), size=32, color=QH_C)
 
         scale_everything = VGroup(fulcrum, base, scale_all)
-        self.play(ReplacementTransform(scale_everything, master_eq), run_time=1.5)
-        hold_for(self, self.NARRATION, "master", used=0.35 + 1.5)
-
-        # Expanded German DIN V 18599 heating demand equation
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "expand"))
-        q_heat_exp = Text("Q_h", color="#EF4444", font_size=28, weight=BOLD, font=BODY_FONT, disable_ligatures=True)
-        eq_exp = Text(" = ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
-        loss_exp = Text("(Q_trans + Q_vent)", color="#3B82F6", font_size=28, font=BODY_FONT, disable_ligatures=True)
-        minus_exp = Text(" - ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
-        eta_exp = Text("η_h", color="#22C55E", font_size=28, font=BODY_FONT, disable_ligatures=True)
-        dot_exp = Text(" · ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
-        gain_exp = Text("(Q_sol + Q_int)", color="#EAB308", font_size=28, font=BODY_FONT, disable_ligatures=True)
-
-        expanded_eq = VGroup(
-            q_heat_exp, eq_exp, loss_exp,
-            minus_exp, eta_exp, dot_exp, gain_exp,
-        ).arrange(RIGHT, buff=0.1)
-        expanded_eq.scale(0.95).move_to(DOWN * 1.0)
-
-        self.play(FadeIn(VGroup(q_heat_exp, eq_exp), shift=UP * 0.3), run_time=0.8)
-        self.wait(0.3)
-        self.play(FadeIn(loss_exp, shift=UP * 0.3), run_time=0.8)
-        self.wait(0.3)
         self.play(
-            FadeIn(VGroup(minus_exp, eta_exp, dot_exp), shift=UP * 0.3), run_time=0.8
+            ReplacementTransform(scale_everything, master_eq),
+            ReplacementTransform(_freeze(loss_read), nb["loss"]),
+            ReplacementTransform(_freeze(gain_read), nb["gain"]),
+            FadeIn(VGroup(nb["qh"], nb["eq"], nb["minus"], nb["approx"])),
+            run_time=1.5,
         )
+        self.add(qh_read)
+        self.play(q_h.animate.set_value(_Q_H), run_time=2.0)
+        hold_for(self, self.NARRATION, "master")
+        #endregion
+
+        #region expanded equation
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "expand"))
+        expanded_eq, ex = math_row([
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", WHITE),
+            ("loss", r"(Q_{\mathrm{T}} + Q_{\mathrm{V}})", LOSS_C), ("minus", "-", WHITE),
+            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", WHITE),
+            ("gain", r"(Q_{\mathrm{sol}} + Q_{\mathrm{int}})", GAIN_C),
+        ], font_size=30, buff=0.12)
+        expanded_eq.move_to(DOWN * 1.1)
+
+        self.play(FadeIn(VGroup(ex["qh"], ex["eq"]), shift=UP * 0.3), run_time=0.8)
         self.wait(0.3)
-        self.play(FadeIn(gain_exp, shift=UP * 0.3), run_time=0.8)
+        self.play(FadeIn(ex["loss"], shift=UP * 0.3), run_time=0.8)
+        self.wait(0.3)
+        self.play(FadeIn(VGroup(ex["minus"], ex["eta"], ex["dot"]), shift=UP * 0.3), run_time=0.8)
+        self.wait(0.3)
+        self.play(FadeIn(ex["gain"], shift=UP * 0.3), run_time=0.8)
 
-        hold_for(self, self.NARRATION, "expand", used=0.35 + 0.8 + 0.3 + 0.8 + 0.3 + 0.8 + 0.3 + 0.8)
+        hold_for(self, self.NARRATION, "expand")
 
-        self.play(FadeOut(VGroup(title, master_eq, expanded_eq, caption)), run_time=1.5)
+        shown = VGroup(*[nb[k] for k in ("qh", "eq", "loss", "minus", "gain", "approx")])
+        self.play(FadeOut(VGroup(title, master_eq, shown, qh_read, expanded_eq, caption)), run_time=1.5)
         self.wait(0.5)
+        #endregion
+
+
+#region System losses scene
+P_DEEP_GREY = "#1F2937"
+_HOUSE_DY = 0.22
+
+
+def _house_section():
+    """🏠 Section through the example house: heated storey, roof, unheated cellar with boiler, store and pipes."""
+    WALL = "#94A3B8"
+    PIPE = "#EF4444"
+    parts = {}
+    parts["room"] = Rectangle(width=4.95, height=1.6, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.10
+                              ).move_to(np.array([-4.0, 0.65, 0.0]))
+    parts["cellar"] = Rectangle(width=4.95, height=1.3, stroke_width=0, fill_color=P_BLUE, fill_opacity=0.10
+                                ).move_to(np.array([-4.0, -0.95, 0.0]))
+    walls = VGroup(
+        Rectangle(width=0.3, height=1.6, color=WALL, fill_opacity=0.35, stroke_width=1.5).move_to(np.array([-6.65, 0.65, 0.0])),
+        Rectangle(width=0.3, height=1.6, color=WALL, fill_opacity=0.35, stroke_width=1.5).move_to(np.array([-1.35, 0.65, 0.0])),
+        Rectangle(width=0.3, height=1.3, color=WALL, fill_opacity=0.5, stroke_width=1.5).move_to(np.array([-6.65, -0.95, 0.0])),
+        Rectangle(width=0.3, height=1.3, color=WALL, fill_opacity=0.5, stroke_width=1.5).move_to(np.array([-1.35, -0.95, 0.0])),
+        Rectangle(width=5.6, height=0.15, color=WALL, fill_opacity=0.5, stroke_width=1.5).move_to(np.array([-4.0, -0.225, 0.0])),
+        Rectangle(width=5.6, height=0.12, color=WALL, fill_opacity=0.5, stroke_width=1.5).move_to(np.array([-4.0, -1.66, 0.0])),
+    )
+    parts["walls"] = walls
+    parts["roof"] = Polygon(np.array([-7.0, 1.45, 0.0]), np.array([-4.0, 2.4, 0.0]), np.array([-1.0, 1.45, 0.0]),
+                            color=WALL, stroke_width=2, fill_color=WALL, fill_opacity=0.15)
+    parts["windows"] = VGroup(*[
+        Rectangle(width=0.3, height=0.6, color=P_BLUE, fill_color=P_BLUE, fill_opacity=0.35, stroke_width=1.5
+                  ).move_to(np.array([x, 0.95, 0.0]))
+        for x in (-6.65, -1.35)
+    ])
+    parts["radiators"] = VGroup(*[
+        VGroup(Rectangle(width=0.22, height=0.45, color=PIPE, fill_color=PIPE, fill_opacity=0.35, stroke_width=1.5),
+               *[Line(UP * 0.18, DOWN * 0.18, color=PIPE, stroke_width=1.2).shift(RIGHT * dx) for dx in (-0.05, 0.05)]
+               ).move_to(np.array([x, 0.17, 0.0]))
+        for x in (-6.33, -1.67)
+    ])
+    parts["thermostat"] = Circle(radius=0.065, color=P_WHITE, stroke_width=2, fill_color=P_DEEP_GREY, fill_opacity=1
+                                 ).move_to(np.array([-6.18, 0.47, 0.0]))
+    parts["store"] = RoundedRectangle(width=0.9, height=0.8, corner_radius=0.18, color=P_YELLOW, stroke_width=2,
+                                      fill_color=P_YELLOW, fill_opacity=0.18).move_to(np.array([-4.6, -1.15, 0.0]))
+    parts["boiler"] = Rectangle(width=1.4, height=0.7, color=P_ORANGE, stroke_width=2, fill_color=P_ORANGE,
+                                fill_opacity=0.18).move_to(np.array([-2.85, -1.2, 0.0]))
+    parts["chimney"] = Rectangle(width=0.22, height=3.15, color=WALL, stroke_width=1.5, fill_color=WALL,
+                                 fill_opacity=0.25).move_to(np.array([-2.35, 0.725, 0.0]))
+    run = [np.array([-6.33, -0.06, 0.0]), np.array([-6.33, -0.48, 0.0]), np.array([-1.67, -0.48, 0.0]),
+           np.array([-1.67, -0.06, 0.0])]
+    pipes = VGroup(
+        VMobject(color=PIPE, stroke_width=4).set_points_as_corners(run),
+        Line(np.array([-4.6, -0.75, 0.0]), np.array([-4.6, -0.48, 0.0]), color=PIPE, stroke_width=4),
+        Line(np.array([-3.55, -1.2, 0.0]), np.array([-4.15, -1.2, 0.0]), color=PIPE, stroke_width=4),
+    )
+    parts["pipes"] = pipes
+    parts["flow_paths"] = [
+        VMobject().set_points_as_corners([np.array([-3.55, -1.2, 0.0]), np.array([-4.15, -1.2, 0.0])]),
+        VMobject().set_points_as_corners([np.array([-4.6, -0.75, 0.0]), np.array([-4.6, -0.48, 0.0]),
+                                          np.array([-6.33, -0.48, 0.0]), np.array([-6.33, -0.06, 0.0])]),
+        VMobject().set_points_as_corners([np.array([-4.6, -0.48, 0.0]), np.array([-1.67, -0.48, 0.0]),
+                                          np.array([-1.67, -0.06, 0.0])]),
+    ]
+    parts["sleeves"] = VGroup(
+        VMobject(color=P_WHITE, stroke_width=11, stroke_opacity=0.55).set_points_as_corners(
+            [np.array([-6.33, -0.32, 0.0]), np.array([-6.33, -0.48, 0.0]), np.array([-1.67, -0.48, 0.0]),
+             np.array([-1.67, -0.32, 0.0])]),
+        Line(np.array([-4.6, -0.75, 0.0]), np.array([-4.6, -0.48, 0.0]), color=P_WHITE, stroke_width=11,
+             stroke_opacity=0.55),
+    )
+    parts["labels"] = VGroup(
+        _label("Speicher", size=15, color=P_YELLOW).move_to(parts["store"]),
+        _label("Wärmeerzeuger", size=15, color=P_ORANGE).move_to(parts["boiler"]),
+        VGroup(_label("unbeheizter", size=15, color=GREY_A), _label("Keller", size=15, color=GREY_A)
+               ).arrange(DOWN, buff=0.06).move_to(np.array([-5.75, -1.15, 0.0])),
+        _label("beheizt, 20 °C", size=15, color=P_ORANGE).move_to(np.array([-4.0, 0.95, 0.0])),
+    )
+    parts["thermo_label"] = _label("Thermostat", size=15, color=P_WHITE).move_to(np.array([-5.4, 0.47, 0.0]))
+    parts["pipe_label"] = _label("30 m Rohr", size=15, color=PIPE).move_to(np.array([-3.25, -0.68, 0.0]))
+    for part in parts.values():
+        for mob in (part if isinstance(part, list) else [part]):
+            mob.shift(UP * _HOUSE_DY)
+    return parts
+
+
+
+class AnlagenVerluste(Scene):
+    NARRATION = [
+        ("need",
+         "The heating demand Q h of about 11,500 kilowatt-hours per year is what the rooms need.",
+         "Der Heizwärmebedarf Q-h von rund 11 500 kWh pro Jahr ist das, was die Räume brauchen."),
+        ("chain",
+         "The system must deliver more: on the way from the boiler to the room, generator, store, pipes and radiators lose heat.",
+         "Die Anlage muss mehr liefern: Auf dem Weg vom Kessel in den Raum verlieren Erzeuger, Speicher, Rohre und Heizkörper Wärme."),
+        ("ce",
+         "Emission: the radiator also heats the outer wall behind it and the thermostat regulates sluggishly — about five percent.",
+         "Übergabe: Der Heizkörper erwärmt auch die Außenwand dahinter, das Thermostat regelt träge — rund 5 Prozent, also 575 kWh."),
+        ("d",
+         "Distribution: 30 metres of pipe in the cold cellar lose 10 watts per metre over 2,900 hours.",
+         "Verteilung: 30 Meter Rohr im kalten Keller verlieren 10 Watt pro Meter über 2 900 Stunden — 870 kWh."),
+        ("s",
+         "Storage: the buffer store loses 1.5 kilowatt-hours per day on standby, over 200 heating days.",
+         "Speicherung: Der Pufferspeicher verliert im Bereitschaftsbetrieb 1,5 kWh pro Tag, über 200 Heiztage 300 kWh."),
+        ("g",
+         "Generation: with an efficiency of 0.95, part of the fuel energy leaves through the flue.",
+         "Erzeugung: Bei einem Wirkungsgrad von 0,95 geht ein Teil als Abgas durch den Schornstein — rund 700 kWh."),
+        ("sum",
+         "Final energy Q E is Q h plus all system losses: about 13,940 kilowatt-hours per year, after DIN V 18599-5.",
+         "Die Endenergie Q-E ist Q-h plus alle Anlagenverluste: rund 13 940 kWh pro Jahr, nach DIN V 18599-5."),
+        ("tip",
+         "So keep pipes and stores inside the heated envelope and insulate the pipes.",
+         "Darum gehören Rohre und Speicher in die beheizte Hülle, und die Leitungen werden gedämmt."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+        N = self.NARRATION
+
+        caption = caption_bar(subtitle_text(N, "need"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        title = _heading("Anlagenverluste: vom Heizwärmebedarf zur Endenergie", size=28, buff=0.5)
+        self.play(Write(title), run_time=0.8)
+
+        QH_C, CE_C, D_C, S_C, G_C, E_C = "#EF4444", "#F472B6", "#FB923C", P_YELLOW, "#A78BFA", P_WHITE
+        h = _house_section()
+
+        #region stacked bar
+        BASE = np.array([0.35, -1.5, 0.0])
+        BAR_W = 0.7
+        UNIT = 3.5 / _Q_E
+        vals = [ValueTracker(0.0) for _ in range(5)]
+        colors = [QH_C, CE_C, D_C, S_C, G_C]
+
+        def bar():
+            group = VGroup()
+            cursor = 0.0
+            for v, c in zip(vals, colors):
+                height = v.get_value() * UNIT
+                if height > 1e-4:
+                    group.add(Rectangle(width=BAR_W, height=height, stroke_width=1, stroke_color=c, fill_color=c,
+                                        fill_opacity=0.8).move_to(BASE + UP * (cursor + height / 2)))
+                cursor += height
+            return group
+
+        finals = [_Q_H, _Q_CE, _Q_D, _Q_S, _Q_G]
+        mids = []
+        cursor = 0.0
+        for f in finals:
+            mids.append(BASE + UP * (cursor + f * UNIT / 2) + RIGHT * BAR_W / 2)
+            cursor += f * UNIT
+        bar_live = always_redraw(bar)
+        bar_floor = Line(BASE + LEFT * 0.55, BASE + RIGHT * 0.55, color=P_WHITE, stroke_width=2)
+        #endregion
+
+        #region readout column
+        CX = 1.55
+        rows_y = [-0.95, -0.3, 0.32, 0.94, 1.56, 2.18]
+        names = ["Heizwärmebedarf", "Übergabe: Heizkörper, Thermostat", "Verteilung: Rohre im Keller",
+                 "Speicherung: Bereitschaft", "Erzeugung: Abgas, Wirkungsgrad 0,95", "Endenergie"]
+        row_colors = colors + [E_C]
+        name_mobs = [_label(n, size=17, color=c).move_to(np.array([CX, y + 0.2, 0.0]), aligned_edge=LEFT)
+                     for n, y, c in zip(names, rows_y, row_colors)]
+        e_val = ValueTracker(0.0)
+        formulas = [
+            lambda: rf"Q_{{\mathrm{{h}}}} \approx {de_num(vals[0].get_value())}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{h,ce}}}} = 5\,\% \cdot {de_num(_Q_H)} \approx {de_num(vals[1].get_value())}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{h,d}}}} = 30\,\mathrm{{m}} \cdot 10\,\mathrm{{W/m}} \cdot 2\,900\,\mathrm{{h}} = "
+                    rf"{de_num(vals[2].get_value())}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{h,s}}}} = 1{{,}}5\,\mathrm{{kWh/d}} \cdot 200\,\mathrm{{d}} = "
+                    rf"{de_num(vals[3].get_value())}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{h,g}}}} = {de_num(_Q_BEFORE_G)} \cdot (1/0{{,}}95 - 1) \approx "
+                    rf"{de_num(vals[4].get_value())}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{E}}}} \approx {de_num(round(e_val.get_value(), -1))}\,\mathrm{{kWh/a}}",
+        ]
+        readouts = [math_readout(fn, np.array([CX, y - 0.16, 0.0]), size=21, color=c)
+                    for fn, y, c in zip(formulas, rows_y, row_colors)]
+        leaders = [Line(np.array([CX - 0.1, y + 0.05, 0.0]), mid, color=c, stroke_width=1.4, stroke_opacity=0.6)
+                   for y, mid, c in zip(rows_y[:5], mids, colors)]
+        #endregion
+
+        #region need
+        self.play(FadeIn(h["room"]), FadeIn(h["cellar"]), FadeIn(h["walls"]), FadeIn(h["roof"]),
+                  FadeIn(h["windows"]), FadeIn(h["labels"][3]), Create(bar_floor), run_time=1.2)
+        self.add(bar_live, readouts[0])
+        self.play(FadeIn(name_mobs[0]), Create(leaders[0]), vals[0].animate.set_value(_Q_H),
+                  h["room"].animate.set_fill(opacity=0.22), run_time=2.0)
+        hold_for(self, N, "need", used=0.3 + 0.8 + 1.2 + 2.0)
+        #endregion
+
+        #region chain
+        caption = swap_caption(self, caption, subtitle_text(N, "chain"))
+        self.play(FadeIn(h["store"]), FadeIn(h["boiler"]), FadeIn(h["chimney"]), Create(h["pipes"]),
+                  FadeIn(h["radiators"]), FadeIn(h["thermostat"]), FadeIn(h["labels"][:3]), run_time=1.5)
+        animate_flows(self, [(h["flow_paths"], "#F87171", "#FCA5A5")], run_time=3.0, waves=6, cycles=2.0, radius=0.05)
+        hold_for(self, N, "chain")
+        #endregion
+
+        #region emission
+        caption = swap_caption(self, caption, subtitle_text(N, "ce"))
+        glow = Rectangle(width=0.3, height=0.6, stroke_width=0, fill_color=QH_C, fill_opacity=0.0
+                         ).move_to(np.array([-6.65, 0.17 + _HOUSE_DY, 0.0]))
+        self.add(glow)
+        self.add(readouts[1])
+        wall_paths = [Line(np.array([-6.3, y, 0.0]), np.array([-7.05, y, 0.0])).shift(UP * _HOUSE_DY)
+                      for y in (0.02, 0.17, 0.32)]
+        self.play(FadeIn(name_mobs[1]), FadeIn(h["thermo_label"]), Create(leaders[1]), run_time=0.5)
+        animate_flows(self, [(wall_paths, "#F87171", P_BLUE)], run_time=3.0, waves=4, cycles=2.0, radius=0.05,
+                      extra=[vals[1].animate.set_value(_Q_CE), glow.animate.set_fill(opacity=0.55),
+                             Wiggle(h["thermostat"], scale_value=1.4, n_wiggles=4)])
+        hold_for(self, N, "ce")
+        #endregion
+
+        #region distribution
+        caption = swap_caption(self, caption, subtitle_text(N, "d"))
+        leak_paths = [Line(np.array([x, -0.52, 0.0]), np.array([x + 0.12, -0.85, 0.0]))
+                      for x in (-6.1, -5.6, -5.15, -4.0, -2.1, -1.9)]
+        leak_paths += [Line(np.array([-6.36, y, 0.0]), np.array([-6.05, y - 0.25, 0.0])) for y in (-0.15,)]
+        leak_paths = [path.shift(UP * _HOUSE_DY) for path in leak_paths]
+        self.add(readouts[2])
+        self.play(FadeIn(name_mobs[2]), FadeIn(h["pipe_label"]), Create(leaders[2]), run_time=0.5)
+        animate_flows(self, [(leak_paths, "#FB923C", P_BLUE)], run_time=3.0, waves=3, cycles=2.0, radius=0.045,
+                      extra=[vals[2].animate.set_value(_Q_D)])
+        hold_for(self, N, "d")
+        #endregion
+
+        #region storage
+        caption = swap_caption(self, caption, subtitle_text(N, "s"))
+        sc = h["store"].get_center()
+        store_paths = [Line(sc + np.array([dx * 0.47, dy * 0.42, 0.0]), sc + np.array([dx * 0.75, dy * 0.62, 0.0]))
+                       for dx, dy in ((-1, 0.5), (-1, -0.4), (1, 0.6), (1, -0.5), (0.3, 1.0))]
+        self.add(readouts[3])
+        self.play(FadeIn(name_mobs[3]), Create(leaders[3]), run_time=0.5)
+        animate_flows(self, [(store_paths, P_YELLOW, P_BLUE)], run_time=3.0, waves=3, cycles=2.0, radius=0.045,
+                      extra=[vals[3].animate.set_value(_Q_S)])
+        hold_for(self, N, "s")
+        #endregion
+
+        #region generation
+        caption = swap_caption(self, caption, subtitle_text(N, "g"))
+        flue = [VMobject().set_points_smoothly([np.array([-2.35, -0.85, 0.0]), np.array([-2.35, 1.0, 0.0]),
+                                                np.array([-2.35, 2.3, 0.0]), np.array([-2.0, 2.75, 0.0])]
+                                               ).shift(UP * _HOUSE_DY)]
+        self.add(readouts[4])
+        self.play(FadeIn(name_mobs[4]), Create(leaders[4]), run_time=0.5)
+        animate_flows(self, [(flue, "#FB923C", "#D1D5DB")], run_time=3.0, waves=6, cycles=2.0, radius=0.08,
+                      extra=[vals[4].animate.set_value(_Q_G)])
+        hold_for(self, N, "g")
+        #endregion
+
+        #region sum
+        caption = swap_caption(self, caption, subtitle_text(N, "sum"))
+        row, box, items = math_panel([
+            ("e", r"Q_{\mathrm{E}}", E_C), (None, "=", P_WHITE), ("h", r"Q_{\mathrm{h}}", QH_C), (None, "+", P_WHITE),
+            ("ce", r"Q_{\mathrm{h,ce}}", CE_C), (None, "+", P_WHITE), ("d", r"Q_{\mathrm{h,d}}", D_C),
+            (None, "+", P_WHITE), ("s", r"Q_{\mathrm{h,s}}", S_C), (None, "+", P_WHITE),
+            ("g", r"Q_{\mathrm{h,g}}", G_C), (None, r"\approx", P_WHITE),
+            ("v", rf"{de_num(round(_Q_E, -1))}\,\mathrm{{kWh/a}}", E_C),
+        ], color=P_TEAL)
+        sources = {
+            key: math_label(src, _slot(r), size=21, color=c, edge="left")
+            for key, src, r, c in zip(
+                ("h", "ce", "d", "s", "g"),
+                (r"Q_{\mathrm{h}}", r"Q_{\mathrm{h,ce}}", r"Q_{\mathrm{h,d}}", r"Q_{\mathrm{h,s}}", r"Q_{\mathrm{h,g}}"),
+                readouts[:5], colors)
+        }
+        self.add(readouts[5])
+        self.play(FadeIn(name_mobs[5]), e_val.animate.set_value(_Q_E), run_time=1.8)
+        copies = {k: s.copy() for k, s in sources.items()}
+        for c in copies.values():
+            for part in c.get_family():
+                part._layout_zone = "formula"
+        self.play(*[ReplacementTransform(copies[k], items[k]) for k in copies], run_time=1.2)
+        rest = VGroup(*[m for m in row.submobjects if all(m is not items[k] for k in copies)])
+        self.play(FadeIn(rest), Create(box), run_time=0.6)
+        hold_for(self, N, "sum")
+        #endregion
+
+        #region tip
+        caption = swap_caption(self, caption, subtitle_text(N, "tip"))
+        self.play(Create(h["sleeves"]), FadeOut(h["pipe_label"]), run_time=1.2)
+        hold_for(self, N, "tip")
+        self.play(FadeOut(caption), run_time=0.3)
+        #endregion
+#endregion
 
 
 class FullFinalCalculationVideo(Scene):
@@ -849,15 +1308,17 @@ class FullFinalCalculationVideo(Scene):
             ReviewingHeatGains,
             Scene4,
             UltimateEnergyBalance,
+            AnlagenVerluste,
         ]
         base_dir = os.path.dirname(os.path.abspath(__file__))
         audio_files = [
-            os.path.join(base_dir, f"scene_{i}_audio.mp3") for i in range(1, 6)
+            os.path.join(base_dir, f"scene_{i}_audio.mp3") for i in range(1, len(scenes) + 1)
         ]
 
         for scene_cls, audio_path in zip(scenes, audio_files):
             if os.path.exists(audio_path):
                 self.add_sound(audio_path)
             self.NARRATION = scene_cls.NARRATION
+            begin_vo_beat(self, scene_cls.__name__)
             scene_cls.construct(self)
             self.clear()
